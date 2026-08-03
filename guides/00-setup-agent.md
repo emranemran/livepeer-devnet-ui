@@ -43,13 +43,16 @@ some-parent-dir/
   livepeer-devnet-ui/    <- this folder
 ```
 
-If you were given `livepeer-devnet-ui` as a folder or zip, put it somewhere and
-clone the protocol next to it:
+Clone both into the same parent directory:
 
 ```bash
-cd /path/to/some-parent-dir
+mkdir -p ~/code && cd ~/code
+git clone https://github.com/emranemran/livepeer-devnet-ui.git
 git clone https://github.com/livepeer/protocol.git
 ```
+
+If you were handed `livepeer-devnet-ui` as a folder or zip instead, put it in the
+parent directory and clone only the protocol next to it.
 
 If the protocol lives somewhere else, edit `livepeer-devnet-ui/config.json` and
 set `protocolDir` to its path (absolute paths are fine).

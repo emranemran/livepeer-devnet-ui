@@ -22,16 +22,18 @@ npm start          # → http://127.0.0.1:4000
 Then press **RESET EVERYTHING** on the SETUP panel and wait ~20 seconds.
 
 Full instructions, including the three non-obvious steps the protocol README
-doesn't mention, are in **[SETUP-AGENT.md](SETUP-AGENT.md)** — written so you can
-hand it to a coding agent and have it do the work.
+doesn't mention, are in **[guides/00-setup-agent.md](guides/00-setup-agent.md)** —
+written as literal steps so you can hand it to a coding agent and have it do the
+work for you.
 
 ## The guides
 
-Three self-contained HTML field guides live in [`guides/`](guides). Download and
-open in a browser — they're designed to be read in this order, and to be re-read.
+Everything in [`guides/`](guides), in reading order. The HTML ones are
+self-contained — download and open in a browser.
 
 | Guide | What it covers |
 |---|---|
+| [00 — Setup, for an agent](guides/00-setup-agent.md) | Ordered, verified commands with expected output at each step and a troubleshooting table. Written to be executed rather than read. |
 | [01 — The Livepeer protocol](guides/01-protocol-field-guide.html) | What the contracts actually do, written for someone new to crypto. Two currencies, staking and delegation, rounds and inflation, the payment lottery, and how upgrades work. |
 | [02 — What runs locally](guides/02-local-devnet.html) | What a "local blockchain" actually is, which command creates which piece, and what evaporates when you close the terminal. |
 | [03 — This UI](guides/03-devnet-ui-guide.html) | A tour of the six panels, what to try first, and a copy-paste prompt for handing setup to a coding agent. |
