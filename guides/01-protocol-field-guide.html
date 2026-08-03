@@ -543,6 +543,8 @@ footer {
 
   <p>Why would anyone lock up LPT? Two reasons. First, staked LPT earns a share of <strong>newly minted LPT</strong> every round — inflation rewards, paid to people who show up and participate. Second, staked LPT earns a share of the <strong>ETH fees</strong> that gateways actually pay. And because most LPT holders don't run GPUs, the protocol lets them <strong>delegate</strong>: point your LPT at an orchestrator you trust, and share in what they earn. That's Chapter 02.</p>
 
+  <p>For where these contracts actually run and how the <code>go-livepeer</code> daemon drives them, see guide 04 — it puts production and this devnet side by side.</p>
+
   <p>One important piece of context before you read any file: <strong>the protocol runs on Arbitrum One, not Ethereum mainnet.</strong> Arbitrum is a "layer 2" — a faster, cheaper chain that periodically posts its results back to Ethereum for security. Livepeer moved there in 2022 because transaction fees on Ethereum made micropayments uneconomical. On Ethereum, only the LPT token contract and a bridge remain. The <code>delta</code> branch you're on is the live L2 code.</p>
 
   <p class="pull">"The chain never sees a single frame of video. It only ever settles the question of who worked, who backed them, and who gets paid."</p>
@@ -619,7 +621,7 @@ footer {
 
   <p>Blockchains have no clock and no cron job. Nothing happens on a schedule; something only happens when a human or a bot sends a transaction. Livepeer works around this with <strong>rounds</strong>, and rounds are the single most important concept for reading this codebase — nearly every function is annotated with which round it belongs to.</p>
 
-  <p>A round is simply <code>roundLength</code> blocks long. On mainnet that's <strong>5,760 blocks, roughly one day</strong>. <code>contracts/rounds/RoundsManager.sol</code> computes <code>currentRound()</code> by dividing the block number by the round length — that part is automatic. But a new round doesn't <em>do</em> anything until someone calls <code>initializeRound()</code>, which is permissionless and typically done by an orchestrator's bot. That single call does three things:</p>
+  <p>A round is simply <code>roundLength</code> blocks long. On mainnet that's <strong>5,760 blocks</strong> — and since Livepeer runs on Arbitrum, where <code>block.number</code> reports the <em>Ethereum</em> L1 block number, that works out at roughly <strong>19–20 hours</strong> (it was a clean 24 when Ethereum blocks were 15 seconds apart). <code>contracts/rounds/RoundsManager.sol</code> computes <code>currentRound()</code> by dividing the block number by the round length — that part is automatic. But a new round doesn't <em>do</em> anything until someone calls <code>initializeRound()</code>, which is permissionless and typically done by an orchestrator's bot. That single call does three things:</p>
 
   <ol>
     <li>Records the previous block's hash as the round's randomness seed.</li>
@@ -1005,7 +1007,7 @@ main().catch(e => { console.error(e); process.exit(1) })</code></pre>
     </div>
     <div>
       <dt>Round</dt>
-      <dd>5,760 blocks, roughly a day. The unit of time for the entire protocol. Must be opened by calling <code>initializeRound()</code>.</dd>
+      <dd>5,760 Ethereum L1 blocks, roughly 19–20 hours. The unit of time for the entire protocol. Must be opened by calling <code>initializeRound()</code>.</dd>
     </div>
     <div>
       <dt>Active set</dt>

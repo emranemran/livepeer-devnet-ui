@@ -61,7 +61,7 @@ export default function knobsPanel(store, ctx) {
         ["Unbonding period", `${commas(p.unbondingPeriod)} rounds`, "BondingManager", "wait between unbond and withdraw"],
         ["Treasury cut", percent(p.treasuryRewardCutRate, PERC_PRECISE, 2), "BondingManager", "skimmed before rewards are split"],
         ["Treasury ceiling", `${fromWei(p.treasuryBalanceCeiling, 0)} LPT`, "BondingManager", "cut auto-zeroes above this"],
-        ["Round length", `${commas(s.round && s.round.roundLength)} blocks`, "RoundsManager", "≈ 1 day at 5,760"],
+        ["Round length", `${commas(s.round && s.round.roundLength)} blocks`, "RoundsManager", "5,760 L1 blocks ≈ 19–20 h"],
         ["Round lock", percent(s.round && s.round.roundLockAmount, PERC, 2), "RoundsManager", "tail of the round that is frozen"],
         ["Inflation", percent(p.inflation, PERC_V2, 6), "Minter", "of total supply, per round"],
         ["Inflation step", percent(p.inflationChange, PERC_V2, 6), "Minter", "per-round adjustment"],

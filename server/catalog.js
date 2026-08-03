@@ -339,7 +339,7 @@ const ACTIONS = [
                 label: "Blocks",
                 type: "uint",
                 default: "5760",
-                help: "5,760 blocks is one round — about a day on mainnet."
+                help: "5,760 blocks is one round. On Arbitrum these are counted in Ethereum L1 blocks, so a round runs about 19–20 hours at today\u2019s 12-second slots."
             }
         ]
     },
@@ -561,8 +561,9 @@ const ACTIONS = [
         label: "Round length",
         blurb: "Blocks per round.",
         help:
-            "5,760 blocks is roughly a day at Ethereum's block time, which is where 'a round is a day' " +
-            "comes from. Shorten it locally to make experiments run faster.",
+            "5,760 blocks — and on Arbitrum these are Ethereum L1 blocks, because block.number reports the L1 " +
+            "number there. That was a clean 24 hours at 15-second blocks; at today's 12-second slots a round runs " +
+            "closer to 19–20 hours. Shorten it locally to make experiments run faster.",
         source: "RoundsManager.sol:setRoundLength",
         sender: "owner",
         args: [{name: "_roundLength", label: "Blocks", type: "uint", default: "5760", help: "Must be greater than zero."}]

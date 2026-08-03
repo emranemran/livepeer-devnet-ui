@@ -357,7 +357,7 @@ npx hardhat unpause --network localhost                             # 4</code></
 
   <p>Blockchains have no clock and no scheduler. Nothing happens on a timer; things happen because somebody sent a transaction. Livepeer works around this with <strong>rounds</strong> — and rounds are the single concept that unlocks the rest of the system.</p>
 
-  <p>A round is a fixed number of blocks: 5,760, which is roughly a day on the real network. But a new round doesn't <em>do</em> anything until somebody calls <code>initializeRound()</code>. That one call freezes the list of orchestrators eligible to earn, decides how much new LPT may be created, and stores a random seed. On mainnet, a bot does it. Here, it's a button.</p>
+  <p>A round is a fixed number of blocks: 5,760 — counted in <em>Ethereum</em> blocks, not Arbitrum ones, which works out at roughly 19–20 hours. But a new round doesn't <em>do</em> anything until somebody calls <code>initializeRound()</code>. That one call freezes the list of orchestrators eligible to earn, decides how much new LPT may be created, and stores a random seed. On mainnet, a bot does it. Here, it's a button.</p>
 
   <p>Then each orchestrator separately calls <strong>reward</strong> to claim their slice of that round's newly minted tokens. Miss it and the tokens are simply never created for you. This is why running an orchestrator is an operational job rather than a passive investment.</p>
 
@@ -540,7 +540,7 @@ npx hardhat unpause --network localhost                             # 4</code></
     </div>
     <div>
       <dt>Round</dt>
-      <dd>5,760 blocks, about a day. The unit of time for everything. Must be opened by someone calling initializeRound().</dd>
+      <dd>5,760 Ethereum L1 blocks, roughly 19–20 hours. The unit of time for everything. Must be opened by someone calling initializeRound().</dd>
     </div>
     <div>
       <dt>Active set</dt>

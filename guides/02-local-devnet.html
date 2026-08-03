@@ -604,7 +604,7 @@ footer {
     <div class="card">
       <span class="card-tag">TIME MACHINE</span>
       <h4>AdjustableRoundsManager</h4>
-      <p>On mainnet a round is 5,760 blocks — about a day — and you wait. This local version lets you call <code>mineBlocks(n)</code> to jump forward instantly. A year of protocol history takes seconds.</p>
+      <p>On mainnet a round is 5,760 Ethereum L1 blocks — roughly 19–20 hours — and you wait. This local version lets you call <code>mineBlocks(n)</code> to jump forward instantly. A year of protocol history takes seconds.</p>
     </div>
     <div class="card">
       <span class="card-tag">FREE MONEY</span>
@@ -724,7 +724,7 @@ main().catch(e => { console.error(e); process.exit(1) })</code></pre>
 
   <h3 class="sub">What you can't do locally</h3>
 
-  <p><strong>Actually transcode video.</strong> Nothing here touches video — that's <a href="https://github.com/livepeer/go-livepeer">go-livepeer</a>, a separate Go program that runs the GPU work and talks to these contracts. Locally you're simulating the money and coordination, with the work itself assumed.</p>
+  <p><strong>Actually transcode video.</strong> Nothing here touches video — that's <a href="https://github.com/livepeer/go-livepeer">go-livepeer</a>, a separate Go program that runs the GPU work and talks to these contracts. Locally you're simulating the money and coordination, with the work itself assumed. Guide 04 breaks down exactly which of its jobs your buttons replaced.</p>
 
   <p><strong>See real network conditions.</strong> Your chain has no other users, no competition for block space, no gas price pressure, and no adversaries. Fees are free and instant, which is exactly what makes it useless for judging what a change costs in practice.</p>
 

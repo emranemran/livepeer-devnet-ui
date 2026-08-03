@@ -75,7 +75,7 @@ export default function timePanel(store, ctx) {
         panelHead(
             "TIME · ROUNDS",
             "The protocol has a heartbeat, and someone has to press the button.",
-            "A round is 5,760 blocks — about a day on mainnet. Nothing about a new round takes effect until " +
+            "A round is 5,760 Ethereum L1 blocks — roughly 19–20 hours. Nothing about a new round takes effect until " +
                 "somebody pays gas to open it. Locally you can skip time for free.",
             "time"
         ),

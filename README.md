@@ -37,6 +37,7 @@ self-contained — download and open in a browser.
 | [01 — The Livepeer protocol](guides/01-protocol-field-guide.html) | What the contracts actually do, written for someone new to crypto. Two currencies, staking and delegation, rounds and inflation, the payment lottery, and how upgrades work. |
 | [02 — What runs locally](guides/02-local-devnet.html) | What a "local blockchain" actually is, which command creates which piece, and what evaporates when you close the terminal. |
 | [03 — This UI](guides/03-devnet-ui-guide.html) | A tour of the six panels, what to try first, and a copy-paste prompt for handing setup to a coding agent. |
+| [04 — Real network vs this devnet](guides/04-real-vs-devnet.html) | Where the contracts actually run, what the `go-livepeer` daemon does, and a side-by-side diagram of every difference between production and your sandbox. Verified against go-livepeer source. |
 
 ## Panels
 
