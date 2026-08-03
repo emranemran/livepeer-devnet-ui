@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Local Livepeer — What's Actually Running</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,700;9..144,900&family=Newsreader:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4ede0;
+  --bg-warm: #ebe1cf;
+  --ink: #1c1d22;
+  --ink-soft: #4a4639;
+  --subdued: #8a8170;
+  --rule: #d6c9b1;
+  --paper-shadow: 0 1px 0 rgba(28,29,34,0.04), 0 12px 40px -16px rgba(28,29,34,0.18);
+
+  --c-1: #1d5b69;
+  --c-2: #b8431a;
+  --c-3: #5e6b27;
+  --c-4: #5b3a7a;
+  --c-5: #a6791a;
+  --c-6: #2a4d7a;
+
+  --accent: #b8431a;
+  --accent-soft: #e8d5c4;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Newsreader', Georgia, serif;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.62;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(184,67,26,0.04) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(29,91,105,0.04) 0%, transparent 40%);
+  min-height: 100vh;
+}
+
+.page { max-width: 760px; margin: 0 auto; padding: 80px 32px 120px; }
+
+@media (max-width: 640px) {
+  .page { padding: 48px 20px 80px; }
+  body { font-size: 17px; }
+}
+
+header.cover {
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 56px;
+  margin-bottom: 56px;
+}
+
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.eyebrow::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+
+h1.title {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: clamp(42px, 7vw, 68px);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  margin-bottom: 20px;
+  font-variation-settings: "opsz" 144, "SOFT" 30;
+}
+h1.title em { font-style: italic; font-weight: 300; color: var(--accent); }
+
+.subtitle {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  font-size: 21px;
+  color: var(--ink-soft);
+  font-weight: 300;
+  max-width: 560px;
+  line-height: 1.4;
+}
+
+.meta {
+  display: flex;
+  gap: 24px;
+  margin-top: 40px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--subdued);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  flex-wrap: wrap;
+}
+
+.tldr {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 32px 36px;
+  margin: 56px 0;
+  position: relative;
+  border-radius: 2px;
+  box-shadow: var(--paper-shadow);
+}
+.tldr::before {
+  content: 'THE ONE-SENTENCE VERSION';
+  position: absolute;
+  top: -10px;
+  left: 24px;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  letter-spacing: 0.15em;
+}
+.tldr p { font-family: 'Fraunces', serif; font-size: 20px; line-height: 1.5; font-weight: 300; }
+.tldr strong { color: var(--accent-soft); font-weight: 500; }
+
+section.chapter { margin: 80px 0; }
+
+.chapter-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--concept, var(--accent));
+  letter-spacing: 0.2em;
+  margin-bottom: 12px;
+  display: block;
+}
+
+h2.chapter-title {
+  font-family: 'Fraunces', serif;
+  font-size: 36px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 28px;
+  font-variation-settings: "opsz" 144;
+}
+h2.chapter-title .concept-marker {
+  display: inline-block;
+  width: 8px; height: 8px;
+  background: var(--concept, var(--accent));
+  border-radius: 50%;
+  margin-right: 14px;
+  vertical-align: middle;
+  transform: translateY(-4px);
+}
+
+h3.sub {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 500;
+  margin: 36px 0 14px;
+  letter-spacing: -0.01em;
+}
+
+section.chapter[data-concept="1"] { --concept: var(--c-1); }
+section.chapter[data-concept="2"] { --concept: var(--c-2); }
+section.chapter[data-concept="3"] { --concept: var(--c-3); }
+section.chapter[data-concept="4"] { --concept: var(--c-4); }
+section.chapter[data-concept="5"] { --concept: var(--c-5); }
+section.chapter[data-concept="6"] { --concept: var(--c-6); }
+
+p { margin-bottom: 18px; }
+
+section.chapter > p:first-of-type::first-letter {
+  font-family: 'Fraunces', serif;
+  font-size: 58px;
+  font-weight: 500;
+  line-height: 0.85;
+  float: left;
+  padding: 8px 12px 0 0;
+  color: var(--concept, var(--accent));
+  font-variation-settings: "opsz" 144;
+}
+
+strong { font-weight: 600; color: var(--ink); }
+em { font-style: italic; }
+ul, ol { margin: 0 0 18px 24px; }
+li { margin-bottom: 8px; }
+
+.diagram { margin: 36px -20px; padding: 32px 24px; background: var(--bg-warm); border-radius: 2px; }
+.diagram-caption {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--subdued);
+  margin-bottom: 16px;
+  text-align: center;
+}
+.diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+
+pre {
+  background: var(--ink);
+  color: #e8e0cc;
+  padding: 24px 28px;
+  margin: 28px 0;
+  border-radius: 2px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  line-height: 1.55;
+  border-left: 3px solid var(--concept, var(--accent));
+}
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88em;
+  background: var(--bg-warm);
+  padding: 2px 6px;
+  border-radius: 2px;
+  color: var(--ink);
+}
+pre code { background: transparent; padding: 0; color: inherit; font-size: inherit; }
+
+.card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 32px 0; }
+@media (max-width: 540px) { .card-grid { grid-template-columns: 1fr; } }
+.card {
+  background: var(--bg-warm);
+  padding: 24px;
+  border-radius: 2px;
+  border-top: 3px solid var(--concept, var(--accent));
+}
+.card h4 { font-family: 'Fraunces', serif; font-size: 19px; font-weight: 600; margin-bottom: 4px; }
+.card .card-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--concept, var(--accent));
+  margin-bottom: 12px;
+  display: block;
+}
+.card p { font-size: 15px; line-height: 1.5; color: var(--ink-soft); margin-bottom: 0; }
+
+.decision { margin: 32px 0; border-collapse: collapse; width: 100%; font-size: 15px; }
+.decision th {
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--subdued);
+  padding: 10px 14px;
+  border-bottom: 1.5px solid var(--ink);
+  font-weight: 500;
+}
+.decision td { padding: 14px; border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.45; }
+.decision td:first-child {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--accent);
+  width: 38%;
+}
+
+.step {
+  border-left: 3px solid var(--accent);
+  padding: 4px 0 4px 24px;
+  margin: 32px 0;
+}
+.step .p-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.step .p-meta .level { color: var(--subdued); }
+.step h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+.step p { font-size: 16px; line-height: 1.55; color: var(--ink-soft); margin-bottom: 10px; }
+.step .deliverable {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--subdued);
+  background: var(--bg-warm);
+  padding: 8px 12px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.warn {
+  background: var(--bg-warm);
+  border-left: 3px solid var(--accent);
+  padding: 18px 22px;
+  margin: 28px 0;
+  border-radius: 2px;
+  font-size: 16px;
+}
+.warn strong { color: var(--accent); }
+
+.pull {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 22px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  margin: 36px 24px;
+  padding-left: 20px;
+  border-left: 2px solid var(--concept, var(--accent));
+}
+
+.glossary { background: var(--ink); color: var(--bg); padding: 40px 36px; margin: 64px -36px 0; border-radius: 2px; }
+@media (max-width: 640px) { .glossary { margin: 48px -20px 0; padding: 32px 24px; } }
+.glossary h3 { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 500; margin-bottom: 28px; color: var(--bg); }
+.glossary h3 em { color: var(--accent-soft); font-style: italic; font-weight: 300; }
+.gloss-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 540px) { .gloss-grid { grid-template-columns: 1fr; } }
+.gloss-grid dt {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-soft);
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+.gloss-grid dd { font-family: 'Newsreader', serif; font-size: 15px; line-height: 1.5; color: #d8cfba; margin-bottom: 16px; }
+
+footer {
+  margin-top: 80px;
+  padding-top: 40px;
+  border-top: 1px solid var(--rule);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--subdued);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">COMPANION SHEET · RUN IT YOURSELF</div>
+  <h1 class="title">Your local<br>Livepeer: what's<br><em>actually</em> running.</h1>
+  <p class="subtitle">Every piece, what it is, which command creates it, and what disappears when you close the terminal. Written so you can do the whole thing from scratch on your own.</p>
+  <div class="meta">
+    <span>4 commands</span>
+    <span>·</span>
+    <span>~5 min to run</span>
+    <span>·</span>
+    <span>Nothing costs money</span>
+  </div>
+</header>
+
+<div class="tldr">
+  <p>A "local blockchain" is just <strong>an ordinary program running on your laptop</strong> that pretends to be Ethereum. It listens on <code>localhost:8545</code>, holds a big table of accounts and contract data in memory, and executes any transaction you send it — instantly, for free, with no connection to the real world. Everything below is you loading Livepeer's contracts into that program and then poking at them. <strong>Kill the program and all of it evaporates.</strong></p>
+</div>
+
+<!-- ========== CHAPTER 1 ========== -->
+<section class="chapter" data-concept="1">
+  <span class="chapter-num">PIECE 01 — THE FAKE CHAIN</span>
+  <h2 class="chapter-title"><span class="concept-marker"></span>One process, one port, 250 imaginary millionaires.</h2>
+
+  <p>When you run <code>npx hardhat node</code>, nothing mysterious happens. A Node.js program starts, opens an HTTP server on port <strong>8545</strong>, and begins speaking a protocol called JSON-RPC — the same language a real Ethereum node speaks. Anything that knows how to talk to Ethereum (a script, a wallet, a block explorer) can point at <code>http://127.0.0.1:8545</code> and will not be able to tell the difference.</p>
+
+  <p>Inside, it's holding a database: which addresses exist, how much ETH each one has, what code is deployed where, and what data each contract has stored. That database starts empty except for <strong>250 pre-funded test accounts, each with 10,000 fake ETH</strong>. Their private keys are printed in the startup log and are identical on every developer's machine on earth — which is exactly why you must never send real money to them.</p>
+
+  <p>Two properties make it a development tool rather than a simulation of reality. It <strong>mines instantly</strong>: a real Ethereum transaction waits for the next block, but here every transaction is confirmed the moment you send it. And it is <strong>entirely in memory</strong>: there is no database file, no chain history on disk. Ctrl-C and the whole world is gone.</p>
+
+  <div class="diagram">
+    <div class="diagram-caption">FIG. 01 — WHAT THE NODE PROCESS IS</div>
+    <svg viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="d1" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#1d5b69"/>
+        </marker>
+      </defs>
+
+      <rect x="150" y="30" width="300" height="180" rx="3" fill="#fff" stroke="#1d5b69" stroke-width="2"/>
+      <text x="300" y="56" font-family="JetBrains Mono" font-size="11" fill="#1d5b69" text-anchor="middle" font-weight="700">npx hardhat node</text>
+      <text x="300" y="72" font-family="Newsreader" font-size="11" fill="#8a8170" font-style="italic" text-anchor="middle">one Node.js process on your laptop</text>
+
+      <rect x="172" y="88" width="256" height="34" fill="#ebe1cf" stroke="#1d5b69" stroke-width="1"/>
+      <text x="300" y="110" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">JSON-RPC server · port 8545</text>
+
+      <rect x="172" y="130" width="256" height="34" fill="#ebe1cf" stroke="#1d5b69" stroke-width="1"/>
+      <text x="300" y="152" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">EVM — runs contract code</text>
+
+      <rect x="172" y="172" width="256" height="34" fill="#1c1d22"/>
+      <text x="300" y="188" font-family="JetBrains Mono" font-size="10" fill="#f4ede0" text-anchor="middle">STATE (in memory only)</text>
+      <text x="300" y="200" font-family="Newsreader" font-size="9" fill="#d8cfba" font-style="italic" text-anchor="middle">250 accounts × 10,000 fake ETH</text>
+
+      <text x="30" y="105" font-family="JetBrains Mono" font-size="10" fill="#8a8170">your</text>
+      <text x="30" y="119" font-family="JetBrains Mono" font-size="10" fill="#8a8170">scripts</text>
+      <line x1="75" y1="110" x2="145" y2="110" stroke="#1d5b69" stroke-width="1.5" marker-end="url(#d1)"/>
+      <text x="110" y="103" font-family="JetBrains Mono" font-size="9" fill="#1d5b69" text-anchor="middle">tx</text>
+
+      <line x1="145" y1="145" x2="80" y2="145" stroke="#1d5b69" stroke-width="1.5" marker-end="url(#d1)"/>
+      <text x="112" y="160" font-family="JetBrains Mono" font-size="9" fill="#1d5b69" text-anchor="middle">result</text>
+
+      <text x="530" y="112" font-family="Fraunces" font-size="13" fill="#b8431a" text-anchor="middle" font-weight="500">Ctrl-C</text>
+      <text x="530" y="132" font-family="Newsreader" font-size="11" fill="#8a8170" font-style="italic" text-anchor="middle">= total</text>
+      <text x="530" y="148" font-family="Newsreader" font-size="11" fill="#8a8170" font-style="italic" text-anchor="middle">amnesia</text>
+      <line x1="455" y1="120" x2="495" y2="120" stroke="#b8431a" stroke-width="1.5" stroke-dasharray="3 3"/>
+    </svg>
+  </div>
+
+  <p class="pull">"It is not connected to anything. That's not a limitation you're working around — it's the entire point."</p>
+</section>
+
+<!-- ========== CHAPTER 2 ========== -->
+<section class="chapter" data-concept="2">
+  <span class="chapter-num">PIECE 02 — THE FOUR COMMANDS</span>
+  <h2 class="chapter-title"><span class="concept-marker"></span>Each command does exactly one thing. Here's which.</h2>
+
+  <p>The confusing part isn't any single command — it's that four separate things must happen in order, in two different terminals, and only the first one is obvious. Here is the whole sequence with what each step actually changes.</p>
+
+  <div class="step">
+    <div class="p-meta"><span>TERMINAL 1</span><span class="level">leave this running</span></div>
+    <h4>Start the fake chain.</h4>
+    <p>Creates the empty world from Piece 01. It prints 250 accounts and then sits there. This terminal is now occupied — every other command goes in a second terminal.</p>
+    <span class="deliverable">npx hardhat node --no-deploy</span>
+  </div>
+
+  <div class="step">
+    <div class="p-meta"><span>TERMINAL 2</span><span class="level">~13 seconds</span></div>
+    <h4>Deploy Livepeer onto it.</h4>
+    <p>Compiles the Solidity if needed, then sends about 21 transactions that upload each contract's code into the chain and wire them together. This is the step that turns a blank Ethereum into a Livepeer.</p>
+    <span class="deliverable">yarn deploy --network localhost</span>
+  </div>
+
+  <div class="step">
+    <div class="p-meta"><span>TERMINAL 2</span><span class="level">easy to miss</span></div>
+    <h4>Add the one contract the deploy script forgets.</h4>
+    <p>Deploys a stub for <code>L2LPTDataCache</code>. On the real network this reports how much LPT is circulating on Ethereum; locally nothing provides it, and without the stub the Minter calls an empty address and everything reverts.</p>
+    <span class="deliverable">npx hardhat deploy --tags ARBITRUM_LPT_DUMMIES --network localhost</span>
+  </div>
+
+  <div class="step">
+    <div class="p-meta"><span>TERMINAL 2</span><span class="level">flips one boolean</span></div>
+    <h4>Turn the protocol on.</h4>
+    <p>Livepeer deploys in a paused state on purpose — a safety mechanism so a real deployment can be inspected before anyone can use it. Locally it just means nothing works until you flip it.</p>
+    <span class="deliverable">npx hardhat unpause --network localhost</span>
+  </div>
+
+  <p>After those four, the protocol is live on your machine and you interact with it by running scripts against it: <code>npx hardhat run --network localhost scripts/whatever.ts</code>, or <code>npx hardhat console --network localhost</code> for an interactive prompt.</p>
+
+  <div class="diagram">
+    <div class="diagram-caption">FIG. 02 — WHICH COMMAND TOUCHES WHAT</div>
+    <svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="d2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#b8431a"/>
+        </marker>
+      </defs>
+
+      <text x="90" y="20" font-family="JetBrains Mono" font-size="11" fill="#1c1d22" font-weight="700" text-anchor="middle">TERMINAL 2</text>
+      <text x="330" y="20" font-family="JetBrains Mono" font-size="11" fill="#1c1d22" font-weight="700" text-anchor="middle">THE CHAIN (T1)</text>
+      <text x="530" y="20" font-family="JetBrains Mono" font-size="11" fill="#1c1d22" font-weight="700" text-anchor="middle">YOUR DISK</text>
+
+      <line x1="90" y1="30" x2="90" y2="300" stroke="#d6c9b1" stroke-width="1" stroke-dasharray="2 4"/>
+      <line x1="330" y1="30" x2="330" y2="300" stroke="#d6c9b1" stroke-width="1" stroke-dasharray="2 4"/>
+      <line x1="530" y1="30" x2="530" y2="300" stroke="#d6c9b1" stroke-width="1" stroke-dasharray="2 4"/>
+
+      <text x="30" y="62" font-family="JetBrains Mono" font-size="9" fill="#8a8170">1</text>
+      <line x1="90" y1="58" x2="325" y2="58" stroke="#b8431a" stroke-width="1.5" marker-end="url(#d2)"/>
+      <text x="207" y="52" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">(node already listening)</text>
+
+      <text x="30" y="102" font-family="JetBrains Mono" font-size="9" fill="#8a8170">2</text>
+      <line x1="90" y1="98" x2="325" y2="98" stroke="#b8431a" stroke-width="1.5" marker-end="url(#d2)"/>
+      <text x="207" y="92" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">deploy ~21 contracts</text>
+      <line x1="335" y1="122" x2="525" y2="122" stroke="#b8431a" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#d2)"/>
+      <text x="430" y="116" font-family="JetBrains Mono" font-size="10" fill="#8a8170" text-anchor="middle">writes deployments/localhost/</text>
+
+      <text x="30" y="162" font-family="JetBrains Mono" font-size="9" fill="#8a8170">3</text>
+      <line x1="90" y1="158" x2="325" y2="158" stroke="#b8431a" stroke-width="1.5" marker-end="url(#d2)"/>
+      <text x="207" y="152" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">deploy L2LPTDataCache stub</text>
+
+      <text x="30" y="202" font-family="JetBrains Mono" font-size="9" fill="#8a8170">4</text>
+      <line x1="90" y1="198" x2="325" y2="198" stroke="#b8431a" stroke-width="1.5" marker-end="url(#d2)"/>
+      <text x="207" y="192" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">Controller.unpause()</text>
+
+      <line x1="90" y1="248" x2="325" y2="248" stroke="#b8431a" stroke-width="1.5" marker-end="url(#d2)"/>
+      <text x="207" y="242" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">bond / reward / everything</text>
+      <line x1="525" y1="228" x2="340" y2="228" stroke="#8a8170" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#d2)"/>
+      <text x="432" y="222" font-family="Newsreader" font-size="10" fill="#8a8170" font-style="italic" text-anchor="middle">scripts read addresses back</text>
+
+      <rect x="240" y="272" width="180" height="34" rx="2" fill="#1c1d22"/>
+      <text x="330" y="293" font-family="JetBrains Mono" font-size="10" fill="#f4ede0" text-anchor="middle">Ctrl-C → all of this gone</text>
+      <text x="530" y="293" font-family="Newsreader" font-size="11" fill="#5e6b27" font-style="italic" text-anchor="middle">disk survives</text>
+    </svg>
+  </div>
+
+  <p>Notice the asymmetry in that diagram, because it's the thing that trips people up on day two: <strong>the chain is memory, the address book is disk.</strong> The folder <code>deployments/localhost/</code> holds a JSON file per contract recording where it was deployed. Your scripts read it to find addresses. But if you restart the node without re-deploying, those files describe a world that no longer exists — every address in them now points at nothing. When in doubt, delete the folder and redo steps 2 through 4.</p>
+</section>
+
+<!-- ========== CHAPTER 3 ========== -->
+<section class="chapter" data-concept="3">
+  <span class="chapter-num">PIECE 03 — WHAT LANDS ON THE CHAIN</span>
+  <h2 class="chapter-title"><span class="concept-marker"></span>Twenty-one contracts, but only six you'll ever talk to.</h2>
+
+  <p>Step 2 deploys a lot. Most of it you can ignore for months. The map below separates the handful you'll actually call from the scaffolding that exists to hold them together.</p>
+
+  <p>The pattern to recognize: most contracts arrive in <strong>pairs</strong>. <code>BondingManagerTarget</code> holds the logic; <code>BondingManager</code> is the permanent address that forwards calls to it. You always use the short name. The <code>Target</code> half is only interesting when you're practicing upgrades.</p>
+
+  <div class="diagram">
+    <div class="diagram-caption">FIG. 03 — YOUR LOCAL DEPLOYMENT, GROUPED</div>
+    <svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="d3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#5e6b27"/>
+        </marker>
+      </defs>
+
+      <rect x="200" y="14" width="200" height="46" rx="2" fill="#1c1d22"/>
+      <text x="300" y="34" font-family="Fraunces" font-size="14" fill="#f4ede0" text-anchor="middle" font-weight="500">Controller</text>
+      <text x="300" y="50" font-family="Newsreader" font-size="10" fill="#d8cfba" font-style="italic" text-anchor="middle">address book + pause switch</text>
+
+      <g stroke="#5e6b27" stroke-width="1.2" fill="none">
+        <line x1="250" y1="60" x2="105" y2="92" marker-end="url(#d3)"/>
+        <line x1="285" y1="60" x2="255" y2="92" marker-end="url(#d3)"/>
+        <line x1="315" y1="60" x2="395" y2="92" marker-end="url(#d3)"/>
+        <line x1="350" y1="60" x2="500" y2="92" marker-end="url(#d3)"/>
+      </g>
+
+      <text x="30" y="86" font-family="JetBrains Mono" font-size="9" fill="#8a8170" letter-spacing="1">THE FOUR YOU'LL USE</text>
+
+      <g font-family="JetBrains Mono" font-size="10" fill="#1c1d22">
+        <rect x="20" y="96" width="130" height="52" fill="#fff" stroke="#5e6b27" stroke-width="1.5"/>
+        <text x="85" y="116" text-anchor="middle" font-weight="700">BondingManager</text>
+        <text x="85" y="130" text-anchor="middle" fill="#8a8170" font-size="9">bond, reward,</text>
+        <text x="85" y="142" text-anchor="middle" fill="#8a8170" font-size="9">pendingStake</text>
+
+        <rect x="170" y="96" width="140" height="52" fill="#fff" stroke="#5e6b27" stroke-width="1.5"/>
+        <text x="240" y="116" text-anchor="middle" font-weight="700">RoundsManager</text>
+        <text x="240" y="130" text-anchor="middle" fill="#8a8170" font-size="9">mineBlocks,</text>
+        <text x="240" y="142" text-anchor="middle" fill="#8a8170" font-size="9">initializeRound</text>
+
+        <rect x="330" y="96" width="130" height="52" fill="#fff" stroke="#5e6b27" stroke-width="1.5"/>
+        <text x="395" y="116" text-anchor="middle" font-weight="700">LivepeerToken</text>
+        <text x="395" y="130" text-anchor="middle" fill="#8a8170" font-size="9">approve,</text>
+        <text x="395" y="142" text-anchor="middle" fill="#8a8170" font-size="9">balanceOf</text>
+
+        <rect x="475" y="96" width="110" height="52" fill="#fff" stroke="#5e6b27" stroke-width="1.5"/>
+        <text x="530" y="116" text-anchor="middle" font-weight="700">TicketBroker</text>
+        <text x="530" y="130" text-anchor="middle" fill="#8a8170" font-size="9">fundDeposit,</text>
+        <text x="530" y="142" text-anchor="middle" fill="#8a8170" font-size="9">redeemTicket</text>
+      </g>
+
+      <text x="30" y="184" font-family="JetBrains Mono" font-size="9" fill="#8a8170" letter-spacing="1">LOCAL-ONLY GIFTS</text>
+      <g font-family="JetBrains Mono" font-size="10" fill="#1c1d22">
+        <rect x="20" y="194" width="175" height="52" fill="#ebe1cf" stroke="#b8431a" stroke-width="1.5"/>
+        <text x="107" y="214" text-anchor="middle" font-weight="700">LivepeerTokenFaucet</text>
+        <text x="107" y="230" text-anchor="middle" fill="#8a8170" font-size="9">6,343,700 fake LPT</text>
+        <text x="107" y="242" text-anchor="middle" fill="#b8431a" font-size="9">not on mainnet</text>
+
+        <rect x="215" y="194" width="185" height="52" fill="#ebe1cf" stroke="#b8431a" stroke-width="1.5"/>
+        <text x="307" y="214" text-anchor="middle" font-weight="700">AdjustableRoundsManager</text>
+        <text x="307" y="230" text-anchor="middle" fill="#8a8170" font-size="9">lets you skip time</text>
+        <text x="307" y="242" text-anchor="middle" fill="#b8431a" font-size="9">not on mainnet</text>
+
+        <rect x="420" y="194" width="165" height="52" fill="#ebe1cf" stroke="#b8431a" stroke-width="1.5"/>
+        <text x="502" y="214" text-anchor="middle" font-weight="700">DummyL2LPTDataCache</text>
+        <text x="502" y="230" text-anchor="middle" fill="#8a8170" font-size="9">stub, returns nothing</text>
+        <text x="502" y="242" text-anchor="middle" fill="#b8431a" font-size="9">step 3</text>
+      </g>
+
+      <text x="30" y="282" font-family="JetBrains Mono" font-size="9" fill="#8a8170" letter-spacing="1">SCAFFOLDING — IGNORE FOR NOW</text>
+      <rect x="20" y="292" width="565" height="70" rx="2" fill="#f4ede0" stroke="#d6c9b1" stroke-width="1"/>
+      <g font-family="JetBrains Mono" font-size="10" fill="#8a8170">
+        <text x="40" y="314">Minter · BondingVotes · ServiceRegistry · MerkleSnapshot · SortedDoublyLL</text>
+        <text x="40" y="332">Governor · Treasury · LivepeerGovernor · PollCreator</text>
+        <text x="40" y="352" fill="#5e6b27">+ a *Target twin for each proxied contract above (the swappable logic half)</text>
+      </g>
+    </svg>
+  </div>
+
+  <p>Two of those deserve a second look because they exist <em>only</em> because you're local, and they're what make experimentation possible at all:</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <span class="card-tag">TIME MACHINE</span>
+      <h4>AdjustableRoundsManager</h4>
+      <p>On mainnet a round is 5,760 blocks — about a day — and you wait. This local version lets you call <code>mineBlocks(n)</code> to jump forward instantly. A year of protocol history takes seconds.</p>
+    </div>
+    <div class="card">
+      <span class="card-tag">FREE MONEY</span>
+      <h4>LivepeerTokenFaucet</h4>
+      <p>Holds 6,343,700 fake LPT, and your deployer account gets another 500,000 minted directly. On mainnet you'd have to buy LPT; here you hand it out to as many test accounts as you like.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CHAPTER 4 ========== -->
+<section class="chapter" data-concept="4">
+  <span class="chapter-num">PIECE 04 — RUN IT YOURSELF</span>
+  <h2 class="chapter-title"><span class="concept-marker"></span>From a fresh clone to minted rewards, unassisted.</h2>
+
+  <p>One-time setup, in the repo root. The <code>.env</code> file must exist but can stay completely empty for local work — its keys are only for talking to real networks.</p>
+
+  <pre><code>cd ~/Documents/code/protocol
+cp .env.sample .env
+yarn                # installs dependencies, a few minutes
+yarn compile        # downloads solc 0.8.9, ~1 minute</code></pre>
+
+  <p>Then the four commands. Terminal 1:</p>
+
+  <pre><code>npx hardhat node --no-deploy</code></pre>
+
+  <p>Terminal 2:</p>
+
+  <pre><code>yarn deploy --network localhost
+npx hardhat deploy --tags ARBITRUM_LPT_DUMMIES --network localhost
+npx hardhat unpause --network localhost</code></pre>
+
+  <p>You should see <code>Controller 0x5FbDB2315678afecb367f032d93F642f64180aa3 paused=false</code>. That address will be identical on your machine and everyone else's, because a fresh local chain is deterministic.</p>
+
+  <p>Now create <code>scripts/drive.ts</code> — it has to live inside the repo or the <code>hardhat</code> import won't resolve — and run it with <code>npx hardhat run --network localhost scripts/drive.ts</code>:</p>
+
+  <pre><code>import {ethers, deployments} from "hardhat"
+
+async function main() {
+    const [me] = await ethers.getSigners()
+    const at = async (n: string, as = n) =>
+        ethers.getContractAt(as, (await deployments.get(n)).address)
+
+    const bm = await at("BondingManager")
+    const rm = await at("AdjustableRoundsManager")
+    const token = await at("LivepeerToken")
+
+    // get the clock off block zero, then open the first round
+    const roundLength = await rm.roundLength()
+    await (await rm.mineBlocks(roundLength.mul(1000))).wait()
+    await (await rm.initializeRound()).wait()
+
+    // become an orchestrator
+    const amount = ethers.utils.parseEther("1000")
+    await (await token.approve(bm.address, amount)).wait()
+    await (await bm.bond(amount, me.address)).wait()
+    await (await bm.transcoder(100000, 500000)).wait()
+
+    // you only join the active set from the NEXT round
+    await (await rm.mineBlocks(roundLength)).wait()
+    await (await rm.initializeRound()).wait()
+
+    const before = await bm.transcoderTotalStake(me.address)
+    await (await bm.reward()).wait()
+    const after = await bm.transcoderTotalStake(me.address)
+    console.log("minted:", ethers.utils.formatEther(after.sub(before)))
+}
+
+main().catch(e => { console.error(e); process.exit(1) })</code></pre>
+
+  <p>Expected output: <code>minted: 0.9786491</code>. You just staked, waited a day, and collected inflation.</p>
+
+  <h3 class="sub">When it breaks</h3>
+
+  <div class="warn">
+    <p><strong><code>HH604: No deployment found for: Controller</code></strong> — you forgot <code>--no-deploy</code> on the node command. Hardhat tried to auto-run the deploy scripts at startup and one of them assumes a Controller already exists.</p>
+  </div>
+
+  <div class="warn">
+    <p><strong><code>function call to a non-contract account</code></strong> — you skipped step 3. The Minter is calling <code>L2LPTDataCache</code>, which isn't there.</p>
+  </div>
+
+  <div class="warn">
+    <p><strong><code>system is paused</code></strong> — you skipped step 4.</p>
+  </div>
+
+  <div class="warn">
+    <p><strong>Arithmetic underflow on <code>initializeRound()</code></strong> — you didn't <code>mineBlocks()</code> first. The chain starts at block zero and the contract tries to read the <em>previous</em> block's hash.</p>
+  </div>
+
+  <div class="warn">
+    <p><strong>Everything reverts for no reason after a restart</strong> — <code>deployments/localhost/</code> is stale. <code>rm -rf deployments/localhost</code> and redo steps 2 through 4.</p>
+  </div>
+</section>
+
+<!-- ========== CHAPTER 5 ========== -->
+<section class="chapter" data-concept="5">
+  <span class="chapter-num">PIECE 05 — WHAT YOU CAN DO WITH IT</span>
+  <h2 class="chapter-title"><span class="concept-marker"></span>You own every account, so you can play all the roles at once.</h2>
+
+  <p>This is the part worth internalizing: on your local chain you control all 250 accounts. You can be the orchestrator, five competing orchestrators, a dozen delegators, and the gateway paying them — simultaneously, in one script. No coordination, no permission, no waiting.</p>
+
+  <table class="decision">
+    <thead>
+      <tr><th>You can…</th><th>By…</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Fast-forward a year of protocol history</td><td>Looping <code>mineBlocks(roundLength)</code> + <code>initializeRound()</code> + <code>reward()</code> 365 times. Takes seconds.</td></tr>
+      <tr><td>See how commission affects delegator returns</td><td>Running the same scenario with different <code>rewardCut</code> values and comparing <code>pendingStake()</code>. This is a real economic experiment.</td></tr>
+      <tr><td>Watch the active set fight for position</td><td>Registering 15 orchestrators when only 10 slots exist, then bonding more stake to one and seeing who gets evicted.</td></tr>
+      <tr><td>Run the payment lottery</td><td>Funding a deposit and reserve, signing tickets, and redeeming a winner. <code>test/helpers/ticket.js</code> has the signing code.</td></tr>
+      <tr><td>Practice a protocol upgrade</td><td>Deploying a modified <code>BondingManagerTarget</code> and re-pointing the Controller at it, then checking that all stake survived.</td></tr>
+      <tr><td>Run a governance vote end to end</td><td>Proposing through <code>LivepeerGovernor</code>, voting with staked LPT, and having a delegator override their orchestrator's vote.</td></tr>
+      <tr><td>Break things on purpose</td><td>Trying to withdraw before the unbonding period, reward twice in a round, or bond zero. Reading the revert messages teaches the rules faster than reading the code.</td></tr>
+      <tr><td>Answer the memo's economics questions</td><td>Scripting a scenario, dumping the numbers to CSV, and charting them. This is the seed of the simulation track.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">What you can't do locally</h3>
+
+  <p><strong>Actually transcode video.</strong> Nothing here touches video — that's <a href="https://github.com/livepeer/go-livepeer">go-livepeer</a>, a separate Go program that runs the GPU work and talks to these contracts. Locally you're simulating the money and coordination, with the work itself assumed.</p>
+
+  <p><strong>See real network conditions.</strong> Your chain has no other users, no competition for block space, no gas price pressure, and no adversaries. Fees are free and instant, which is exactly what makes it useless for judging what a change costs in practice.</p>
+
+  <p><strong>Test against real state.</strong> Your Livepeer starts empty. The real one has years of accumulated stake, delegations and pending earnings. That gap is what <em>forking</em> addresses — copying live mainnet state into a local chain and experimenting against that instead. Your local chain is the sandbox; a fork is the dress rehearsal.</p>
+
+  <p class="pull">"Locally you can do anything and it means nothing. That's the trade, and for learning it's the right one."</p>
+</section>
+
+<!-- ========== GLOSSARY ========== -->
+<div class="glossary">
+  <h3>Quick <em>reference</em>.</h3>
+  <dl class="gloss-grid">
+    <div>
+      <dt>Local chain / devnet</dt>
+      <dd>A program on your laptop pretending to be Ethereum. Instant, free, in-memory, connected to nothing.</dd>
+    </div>
+    <div>
+      <dt>Hardhat</dt>
+      <dd>The tool that runs the fake chain, compiles Solidity, and executes your scripts. Every command here starts with it.</dd>
+    </div>
+    <div>
+      <dt>localhost:8545</dt>
+      <dd>The port the fake chain listens on. <code>--network localhost</code> means "send this there."</dd>
+    </div>
+    <div>
+      <dt>Transaction (tx)</dt>
+      <dd>A function call sent to a contract that changes stored data. Costs gas on a real chain; free here.</dd>
+    </div>
+    <div>
+      <dt>Deploy</dt>
+      <dd>Uploading a contract's compiled code into the chain so it has an address and can be called.</dd>
+    </div>
+    <div>
+      <dt>Revert</dt>
+      <dd>A failed transaction. All its changes are undone and you get an error message. Reverts are normal and informative.</dd>
+    </div>
+    <div>
+      <dt>deployments/localhost/</dt>
+      <dd>JSON files on disk recording where each contract landed. Survives restarts — which is the problem, because the chain doesn't.</dd>
+    </div>
+    <div>
+      <dt>artifacts/ · typechain/</dt>
+      <dd>Compiler output and generated TypeScript types. Regenerated by <code>yarn compile</code>; safe to delete.</dd>
+    </div>
+    <div>
+      <dt>Proxy vs Target</dt>
+      <dd><code>BondingManager</code> is the permanent address you call; <code>BondingManagerTarget</code> is the swappable logic behind it.</dd>
+    </div>
+    <div>
+      <dt>Fork</dt>
+      <dd>A local chain seeded with a copy of real mainnet state. Between a blank devnet and the real thing.</dd>
+    </div>
+  </dl>
+</div>
+
+<footer>END · KEEP · RE-READ</footer>
+
+</div>
+</body>
+</html>

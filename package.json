@@ -1,0 +1,16 @@
+{
+  "name": "livepeer-devnet-ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A local terminal-style UI for driving and understanding a Livepeer protocol devnet.",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ethers": "^5.7.2"
+  }
+}

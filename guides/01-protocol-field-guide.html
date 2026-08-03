@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Livepeer Protocol — A Field Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,700;9..144,900&family=Newsreader:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4ede0;
+  --bg-warm: #ebe1cf;
+  --ink: #1c1d22;
+  --ink-soft: #4a4639;
+  --subdued: #8a8170;
+  --rule: #d6c9b1;
+  --paper-shadow: 0 1px 0 rgba(28,29,34,0.04), 0 12px 40px -16px rgba(28,29,34,0.18);
+
+  --c-1: #1d5b69;
+  --c-2: #b8431a;
+  --c-3: #5e6b27;
+  --c-4: #5b3a7a;
+  --c-5: #a6791a;
+  --c-6: #2a4d7a;
+
+  --accent: #b8431a;
+  --accent-soft: #e8d5c4;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Newsreader', Georgia, serif;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.62;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(184,67,26,0.04) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(29,91,105,0.04) 0%, transparent 40%);
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 80px 32px 120px;
+}
+
+@media (max-width: 640px) {
+  .page { padding: 48px 20px 80px; }
+  body { font-size: 17px; }
+}
+
+/* ---------- COVER ---------- */
+header.cover {
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 56px;
+  margin-bottom: 56px;
+  position: relative;
+}
+
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+h1.title {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: clamp(42px, 7vw, 68px);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  margin-bottom: 20px;
+  font-variation-settings: "opsz" 144, "SOFT" 30;
+}
+
+h1.title em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--accent);
+}
+
+.subtitle {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  font-size: 21px;
+  color: var(--ink-soft);
+  font-weight: 300;
+  max-width: 540px;
+  line-height: 1.4;
+}
+
+.meta {
+  display: flex;
+  gap: 24px;
+  margin-top: 40px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--subdued);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  flex-wrap: wrap;
+}
+
+/* ---------- TLDR ---------- */
+.tldr {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 32px 36px;
+  margin: 56px 0;
+  position: relative;
+  border-radius: 2px;
+  box-shadow: var(--paper-shadow);
+}
+
+.tldr::before {
+  content: 'IF YOU REMEMBER NOTHING ELSE';
+  position: absolute;
+  top: -10px;
+  left: 24px;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  letter-spacing: 0.15em;
+}
+
+.tldr p {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  line-height: 1.5;
+  font-weight: 300;
+}
+
+.tldr strong { color: var(--accent-soft); font-weight: 500; }
+
+/* ---------- CHAPTERS ---------- */
+section.chapter { margin: 80px 0; }
+
+.chapter-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--concept, var(--accent));
+  letter-spacing: 0.2em;
+  margin-bottom: 12px;
+  display: block;
+}
+
+h2.chapter-title {
+  font-family: 'Fraunces', serif;
+  font-size: 36px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 28px;
+  font-variation-settings: "opsz" 144;
+}
+
+h2.chapter-title .concept-marker {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--concept, var(--accent));
+  border-radius: 50%;
+  margin-right: 14px;
+  vertical-align: middle;
+  transform: translateY(-4px);
+}
+
+section.chapter[data-concept="1"] { --concept: var(--c-1); }
+section.chapter[data-concept="2"] { --concept: var(--c-2); }
+section.chapter[data-concept="3"] { --concept: var(--c-3); }
+section.chapter[data-concept="4"] { --concept: var(--c-4); }
+section.chapter[data-concept="5"] { --concept: var(--c-5); }
+section.chapter[data-concept="6"] { --concept: var(--c-6); }
+
+p { margin-bottom: 18px; }
+
+section.chapter > p:first-of-type::first-letter {
+  font-family: 'Fraunces', serif;
+  font-size: 58px;
+  font-weight: 500;
+  line-height: 0.85;
+  float: left;
+  padding: 8px 12px 0 0;
+  color: var(--concept, var(--accent));
+  font-variation-settings: "opsz" 144;
+}
+
+strong { font-weight: 600; color: var(--ink); }
+em { font-style: italic; }
+
+ul, ol { margin: 0 0 18px 24px; }
+li { margin-bottom: 8px; }
+
+/* ---------- DIAGRAMS ---------- */
+.diagram {
+  margin: 36px -20px;
+  padding: 32px 24px;
+  background: var(--bg-warm);
+  border-radius: 2px;
+}
+
+.diagram-caption {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--subdued);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.diagram svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---------- CODE ---------- */
+pre {
+  background: var(--ink);
+  color: #e8e0cc;
+  padding: 24px 28px;
+  margin: 28px 0;
+  border-radius: 2px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  line-height: 1.55;
+  border-left: 3px solid var(--concept, var(--accent));
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88em;
+  background: var(--bg-warm);
+  padding: 2px 6px;
+  border-radius: 2px;
+  color: var(--ink);
+}
+
+pre code { background: transparent; padding: 0; color: inherit; font-size: inherit; }
+
+/* ---------- CARDS ---------- */
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 32px 0;
+}
+@media (max-width: 540px) { .card-grid { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--bg-warm);
+  padding: 24px;
+  border-radius: 2px;
+  border-top: 3px solid var(--concept, var(--accent));
+}
+
+.card h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 19px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.card .card-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--concept, var(--accent));
+  margin-bottom: 12px;
+  display: block;
+}
+
+.card p {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin-bottom: 0;
+}
+
+/* ---------- DECISION TABLE ---------- */
+.decision {
+  margin: 32px 0;
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 15px;
+}
+
+.decision th {
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--subdued);
+  padding: 10px 14px;
+  border-bottom: 1.5px solid var(--ink);
+  font-weight: 500;
+}
+
+.decision td {
+  padding: 14px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.decision td:first-child {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--accent);
+  width: 38%;
+}
+
+/* ---------- PROJECTS ---------- */
+.project {
+  border-left: 3px solid var(--accent);
+  padding: 4px 0 4px 24px;
+  margin: 32px 0;
+}
+
+.project .p-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.project .p-meta .level { color: var(--subdued); }
+
+.project h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+
+.project p {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+
+.project .deliverable {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--subdued);
+  background: var(--bg-warm);
+  padding: 8px 12px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* ---------- PULL QUOTE ---------- */
+.pull {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 22px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  margin: 36px 24px;
+  padding-left: 20px;
+  border-left: 2px solid var(--concept, var(--accent));
+}
+
+/* ---------- GLOSSARY ---------- */
+.glossary {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 40px 36px;
+  margin: 64px -36px 0;
+  border-radius: 2px;
+}
+
+@media (max-width: 640px) {
+  .glossary { margin: 48px -20px 0; padding: 32px 24px; }
+}
+
+.glossary h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 500;
+  margin-bottom: 28px;
+  color: var(--bg);
+}
+.glossary h3 em { color: var(--accent-soft); font-style: italic; font-weight: 300; }
+
+.gloss-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 540px) { .gloss-grid { grid-template-columns: 1fr; } }
+
+.gloss-grid dt {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-soft);
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.gloss-grid dd {
+  font-family: 'Newsreader', serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #d8cfba;
+  margin-bottom: 16px;
+}
+
+/* ---------- FOOTER ---------- */
+footer {
+  margin-top: 80px;
+  padding-top: 40px;
+  border-top: 1px solid var(--rule);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--subdued);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<!-- ========== COVER ========== -->
+<header class="cover">
+  <div class="eyebrow">A FIELD GUIDE · LIVEPEER/PROTOCOL</div>
+  <h1 class="title">The Livepeer<br>protocol, for<br>someone <em>new</em><br>to crypto.</h1>
+  <p class="subtitle">What the contracts in this repo actually do, how the money moves, and how to run the whole thing on your laptop.</p>
+  <div class="meta">
+    <span>Branch: delta</span>
+    <span>·</span>
+    <span>~35 min read</span>
+    <span>·</span>
+    <span>Re-readable</span>
+  </div>
+</header>
+
+<!-- ========== TLDR ========== -->
+<div class="tldr">
+  <p>Livepeer pays for video work in <strong>ETH</strong>, but decides <em>who is allowed to do that work</em> using <strong>LPT</strong>. Almost every line of Solidity in this repo exists to answer one of two questions: <strong>who is in the active set this round</strong>, and <strong>how does this round's newly minted LPT and collected ETH get split between them and the people who backed them</strong>. Two currencies, two jobs. Once you see that split, the whole codebase snaps into shape.</p>
+</div>
+
+<!-- ========== CHAPTER 1 ========== -->
+<section class="chapter" data-concept="1">
+  <span class="chapter-num">CHAPTER 01 — THE MARKET</span>
+  <h2 class="chapter-title"><span class="concept-marker"></span>Livepeer is a marketplace for video encoding that uses a token to decide who gets hired.</h2>
+
+  <p>Video streaming has an expensive, boring problem: every video you upload has to be converted into a dozen different sizes and formats so it plays on a phone, a laptop, and a TV. That conversion is called <strong>transcoding</strong>, it eats GPU time, and cloud providers charge a lot for it. Livepeer's pitch is that a global pool of people with idle GPUs will do it cheaper.</p>
+
+  <p>So you have a two-sided market. On one side, <strong>gateways</strong> (the code and older docs call them <em>broadcasters</em> or <em>senders</em>) have video and money. On the other, <strong>orchestrators</strong> (the code calls them <em>transcoders</em>) have GPUs and want to get paid. The actual video never touches the blockchain — it flows directly between the two parties over the network. This repo is only the accounting and coordination layer.</p>
+
+  <p>Here is the part that trips up everyone new: <strong>there are two different currencies doing two different jobs.</strong> Gateways pay for work in <strong>ETH</strong>, the ordinary currency of the Ethereum ecosystem. But the right to <em>be picked</em> for that work is bought with <strong>LPT</strong>, Livepeer's own token. LPT is not the payment currency. LPT is the reputation-and-security deposit. You lock it up to say "I'm serious, and I have something to lose if I cheat."</p>
+
+  <div class="diagram">
+    <div class="diagram-caption">FIG. 01 — TWO CURRENCIES, TWO JOBS</div>
+    <svg viewBox="0 0 600 330" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="a1" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#1d5b69"/>
+        </marker>
+        <marker id="a1b" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#b8431a"/>
+        </marker>
+      </defs>
+
+      <rect x="30" y="40" width="170" height="66" rx="2" fill="#fff" stroke="#1d5b69" stroke-width="1.5"/>
+      <text x="115" y="68" font-family="Fraunces" font-size="15" fill="#1c1d22" text-anchor="middle" font-weight="500">GATEWAY</text>
+      <text x="115" y="88" font-family="Newsreader" font-size="11" fill="#8a8170" font-style="italic" text-anchor="middle">has video + ETH</text>
+
+      <rect x="400" y="40" width="170" height="66" rx="2" fill="#fff" stroke="#1d5b69" stroke-width="1.5"/>
+      <text x="485" y="68" font-family="Fraunces" font-size="15" fill="#1c1d22" text-anchor="middle" font-weight="500">ORCHESTRATOR</text>
+      <text x="485" y="88" font-family="Newsreader" font-size="11" fill="#8a8170" font-style="italic" text-anchor="middle">has GPUs + LPT stake</text>
+
+      <line x1="200" y1="62" x2="395" y2="62" stroke="#1d5b69" stroke-width="1.5" marker-end="url(#a1)"/>
+      <text x="297" y="56" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">raw video (off-chain)</text>
+
+      <line x1="395" y1="90" x2="205" y2="90" stroke="#1d5b69" stroke-width="1.5" marker-end="url(#a1)"/>
+      <text x="300" y="103" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">transcoded renditions</text>
+
+      <text x="300" y="145" font-family="JetBrains Mono" font-size="10" fill="#8a8170" text-anchor="middle" letter-spacing="1">— — — — — — ON-CHAIN, THIS REPO — — — — — —</text>
+
+      <rect x="30" y="170" width="240" height="76" rx="2" fill="#ebe1cf" stroke="#b8431a" stroke-width="1.5"/>
+      <text x="150" y="198" font-family="Fraunces" font-size="15" fill="#1c1d22" text-anchor="middle" font-weight="500">ETH · payment rail</text>
+      <text x="150" y="218" font-family="JetBrains Mono" font-size="10" fill="#8a8170" text-anchor="middle">contracts/pm/TicketBroker</text>
+      <text x="150" y="235" font-family="Newsreader" font-size="11" fill="#4a4639" font-style="italic" text-anchor="middle">"here's your fee for the work"</text>
+
+      <rect x="330" y="170" width="240" height="76" rx="2" fill="#ebe1cf" stroke="#b8431a" stroke-width="1.5"/>
+      <text x="450" y="198" font-family="Fraunces" font-size="15" fill="#1c1d22" text-anchor="middle" font-weight="500">LPT · security rail</text>
+      <text x="450" y="218" font-family="JetBrains Mono" font-size="10" fill="#8a8170" text-anchor="middle">contracts/bonding/BondingManager</text>
+      <text x="450" y="235" font-family="Newsreader" font-size="11" fill="#4a4639" font-style="italic" text-anchor="middle">"who is even eligible to work"</text>
+
+      <line x1="115" y1="110" x2="130" y2="165" stroke="#b8431a" stroke-width="1.5" marker-end="url(#a1b)"/>
+      <line x1="485" y1="110" x2="465" y2="165" stroke="#b8431a" stroke-width="1.5" marker-end="url(#a1b)"/>
+
+      <line x1="450" y1="250" x2="450" y2="285" stroke="#b8431a" stroke-width="1.5" marker-end="url(#a1b)"/>
+      <text x="450" y="308" font-family="Fraunces" font-size="14" fill="#1c1d22" text-anchor="middle" font-weight="500">more stake → more work routed to you</text>
+    </svg>
+  </div>
+
+  <p>Why would anyone lock up LPT? Two reasons. First, staked LPT earns a share of <strong>newly minted LPT</strong> every round — inflation rewards, paid to people who show up and participate. Second, staked LPT earns a share of the <strong>ETH fees</strong> that gateways actually pay. And because most LPT holders don't run GPUs, the protocol lets them <strong>delegate</strong>: point your LPT at an orchestrator you trust, and share in what they earn. That's Chapter 02.</p>
+
+  <p>One important piece of context before you read any file: <strong>the protocol runs on Arbitrum One, not Ethereum mainnet.</strong> Arbitrum is a "layer 2" — a faster, cheaper chain that periodically posts its results back to Ethereum for security. Livepeer moved there in 2022 because transaction fees on Ethereum made micropayments uneconomical. On Ethereum, only the LPT token contract and a bridge remain. The <code>delta</code> branch you're on is the live L2 code.</p>
+
+  <p class="pull">"The chain never sees a single frame of video. It only ever settles the question of who worked, who backed them, and who gets paid."</p>
+</section>
+
+<!-- ========== CHAPTER 2 ========== -->
+<section class="chapter" data-concept="2">
+  <span class="chapter-num">CHAPTER 02 — STAKE &amp; DELEGATION</span>
+  <h2 class="chapter-title"><span class="concept-marker"></span>BondingManager is the biggest file in the repo because it is the whole economy.</h2>
+
+  <p>Open <code>contracts/bonding/BondingManager.sol</code> and you'll find about 1,800 lines. Do not read it top to bottom. It has exactly two data structures and everything else is bookkeeping around them.</p>
+
+  <p>A <strong>Delegator</strong> is anyone who has locked LPT. The struct tracks <code>bondedAmount</code> (how much they locked), <code>delegateAddress</code> (who they're backing), <code>delegatedAmount</code> (how much others have pointed at <em>them</em>), and <code>lastClaimRound</code> (how far their earnings have been tallied up). A <strong>Transcoder</strong> is a delegator who has declared themselves open for business by calling <code>transcoder(rewardCut, feeShare)</code>. Crucially, <strong>an orchestrator is just a delegator who delegates to themselves</strong> and then accepts delegations from others. There is no separate "operator" type.</p>
+
+  <p>Those two commission numbers are the deal an orchestrator offers the market, and they are confusingly asymmetric — this catches everyone:</p>
+
+  <ul>
+    <li><strong><code>rewardCut</code></strong> — the percentage of newly minted LPT rewards that the orchestrator <em>keeps for themselves</em>. Higher = worse for you as a delegator.</li>
+    <li><strong><code>feeShare</code></strong> — the percentage of ETH fees the orchestrator <em>pays out to delegators</em>. Higher = better for you as a delegator.</li>
+  </ul>
+
+  <p>Both are expressed as a numerator over <code>MathUtils.PERC_DIVISOR</code>, which is <code>1_000_000</code>. So a <code>rewardCut</code> of <code>100000</code> means 10%. You will see this "percentage as a millionth" pattern everywhere in the codebase; there's also a <code>PreciseMathUtils</code> with a 10<sup>27</sup> divisor used where rounding errors would compound.</p>
+
+  <div class="diagram">
+    <div class="diagram-caption">FIG. 02 — WHERE ONE ROUND'S REWARD GOES</div>
+    <svg viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="a2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#b8431a"/>
+        </marker>
+      </defs>
+
+      <rect x="200" y="20" width="200" height="54" rx="2" fill="#fff" stroke="#b8431a" stroke-width="1.5"/>
+      <text x="300" y="44" font-family="Fraunces" font-size="15" fill="#1c1d22" text-anchor="middle" font-weight="500">reward() minted LPT</text>
+      <text x="300" y="63" font-family="Newsreader" font-size="11" fill="#8a8170" font-style="italic" text-anchor="middle">this orchestrator's slice of the round</text>
+
+      <line x1="300" y1="74" x2="300" y2="100" stroke="#b8431a" stroke-width="1.5" marker-end="url(#a2)"/>
+
+      <rect x="380" y="105" width="180" height="48" rx="2" fill="#ebe1cf" stroke="#b8431a" stroke-width="1"/>
+      <text x="470" y="126" font-family="Fraunces" font-size="14" fill="#1c1d22" text-anchor="middle" font-weight="500">TREASURY CUT</text>
+      <text x="470" y="144" font-family="JetBrains Mono" font-size="10" fill="#8a8170" text-anchor="middle">10% on mainnet</text>
+
+      <line x1="330" y1="100" x2="378" y2="118" stroke="#b8431a" stroke-width="1.5" marker-end="url(#a2)"/>
+
+      <rect x="200" y="105" width="160" height="48" rx="2" fill="#fff" stroke="#b8431a" stroke-width="1.5"/>
+      <text x="280" y="134" font-family="Fraunces" font-size="14" fill="#1c1d22" text-anchor="middle" font-weight="500">remainder</text>
+
+      <line x1="245" y1="153" x2="150" y2="195" stroke="#b8431a" stroke-width="1.5" marker-end="url(#a2)"/>
+      <line x1="320" y1="153" x2="400" y2="195" stroke="#b8431a" stroke-width="1.5" marker-end="url(#a2)"/>
+
+      <rect x="30" y="200" width="220" height="66" rx="2" fill="#ebe1cf" stroke="#b8431a" stroke-width="1"/>
+      <text x="140" y="224" font-family="Fraunces" font-size="14" fill="#1c1d22" text-anchor="middle" font-weight="500">ORCHESTRATOR KEEPS</text>
+      <text x="140" y="243" font-family="JetBrains Mono" font-size="10" fill="#8a8170" text-anchor="middle">rewardCut %</text>
+      <text x="140" y="259" font-family="Newsreader" font-size="11" fill="#4a4639" font-style="italic" text-anchor="middle">+ their own stake's share</text>
+
+      <rect x="350" y="200" width="220" height="66" rx="2" fill="#ebe1cf" stroke="#b8431a" stroke-width="1"/>
+      <text x="460" y="224" font-family="Fraunces" font-size="14" fill="#1c1d22" text-anchor="middle" font-weight="500">DELEGATORS SPLIT</text>
+      <text x="460" y="243" font-family="JetBrains Mono" font-size="10" fill="#8a8170" text-anchor="middle">(100 − rewardCut) %</text>
+      <text x="460" y="259" font-family="Newsreader" font-size="11" fill="#4a4639" font-style="italic" text-anchor="middle">pro-rata by stake</text>
+    </svg>
+  </div>
+
+  <p>The verbs a delegator uses are <code>bond()</code>, <code>unbond()</code>, <code>rebond()</code> and <code>withdrawStake()</code>. Unbonding is deliberately slow: calling <code>unbond()</code> creates an <strong>UnbondingLock</strong> with a <code>withdrawRound</code> seven rounds (about a week) in the future. That delay is the security mechanism — it means misbehavior can be detected and punished before the culprit can pull their collateral out. <code>rebond()</code> cancels a pending unlock and puts the stake back to work.</p>
+
+  <p>Only the top <strong>100</strong> orchestrators by total stake are <em>active</em> and eligible to earn in any given round (<code>numActiveTranscoders</code> in <code>deploy/migrations.config.ts</code>; the default for fresh local deploys is 10). Keeping a sorted list of 100 candidates cheaply on-chain is genuinely hard, which is why the repo carries <code>contracts/libraries/SortedDoublyLL.sol</code> — a sorted doubly-linked list. It's also why half the public functions have a <code>WithHint</code> twin, like <code>bondWithHint(amount, to, oldPosPrev, oldPosNext, newPosPrev, newPosNext)</code>. You're telling the contract roughly where in the list your new position belongs so it doesn't have to scan. Pass zero addresses and it figures it out itself, just for more gas.</p>
+
+  <p>The last thing to know: <strong>earnings are lazy.</strong> Nothing is pushed to you. The protocol records a per-round "cumulative reward factor" per orchestrator, and your balance is computed on demand by comparing the factor at your <code>lastClaimRound</code> to the factor now. That's what <code>pendingStake()</code>, <code>pendingFees()</code> and <code>claimEarnings()</code> do, and it's why <code>EarningsPoolLIP36.sol</code> exists. Without it, paying 100 orchestrators × thousands of delegators every round would cost more gas than the rewards are worth.</p>
+</section>
+
+<!-- ========== CHAPTER 3 ========== -->
+<section class="chapter" data-concept="3">
+  <span class="chapter-num">CHAPTER 03 — ROUNDS &amp; INFLATION</span>
+  <h2 class="chapter-title"><span class="concept-marker"></span>The protocol has a heartbeat, and someone has to press the button.</h2>
+
+  <p>Blockchains have no clock and no cron job. Nothing happens on a schedule; something only happens when a human or a bot sends a transaction. Livepeer works around this with <strong>rounds</strong>, and rounds are the single most important concept for reading this codebase — nearly every function is annotated with which round it belongs to.</p>
+
+  <p>A round is simply <code>roundLength</code> blocks long. On mainnet that's <strong>5,760 blocks, roughly one day</strong>. <code>contracts/rounds/RoundsManager.sol</code> computes <code>currentRound()</code> by dividing the block number by the round length — that part is automatic. But a new round doesn't <em>do</em> anything until someone calls <code>initializeRound()</code>, which is permissionless and typically done by an orchestrator's bot. That single call does three things:</p>
+
+  <ol>
+    <li>Records the previous block's hash as the round's randomness seed.</li>
+    <li>Calls <code>BondingManager.setCurrentRoundTotalActiveStake()</code> — freezing the active set and its total stake for the round.</li>
+    <li>Calls <code>Minter.setCurrentRewardTokens()</code> — deciding how much new LPT may be minted this round.</li>
+  </ol>
+
+  <p>Then each active orchestrator separately calls <code>reward()</code> to claim their slice. Miss it and that round's inflation reward is simply gone for you and your delegators. This is why running an orchestrator is an operational job, not a passive one — and it's why the newest addition to the contract exists: <code>setRewardCaller()</code> lets an orchestrator nominate a second, hot-wallet address that may call <code>rewardForTranscoder()</code> on their behalf, so the keys controlling millions in stake don't have to sit on an always-online server.</p>
+
+  <div class="diagram">
+    <div class="diagram-caption">FIG. 03 — THE ROUND LOOP</div>
+    <svg viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="a3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#5e6b27"/>
+        </marker>
+      </defs>
+
+      <text x="30" y="40" font-family="JetBrains Mono" font-size="11" fill="#8a8170" letter-spacing="1">5760 BLOCKS PASS</text>
+      <line x1="170" y1="35" x2="215" y2="35" stroke="#5e6b27" stroke-width="1.5" marker-end="url(#a3)"/>
+
+      <rect x="225" y="12" width="230" height="48" rx="2" fill="#fff" stroke="#5e6b27" stroke-width="1.5"/>
+      <text x="340" y="33" font-family="Fraunces" font-size="15" fill="#1c1d22" text-anchor="middle" font-weight="500">initializeRound()</text>
+      <text x="340" y="51" font-family="Newsreader" font-size="11" fill="#8a8170" font-style="italic" text-anchor="middle">anyone may call · usually a bot</text>
+
+      <line x1="340" y1="60" x2="340" y2="88" stroke="#5e6b27" stroke-width="1.5" marker-end="url(#a3)"/>
+
+      <rect x="60" y="95" width="170" height="60" rx="2" fill="#ebe1cf" stroke="#5e6b27" stroke-width="1"/>
+      <text x="145" y="118" font-family="Fraunces" font-size="13" fill="#1c1d22" text-anchor="middle" font-weight="500">FREEZE ACTIVE SET</text>
+      <text x="145" y="136" font-family="JetBrains Mono" font-size="9" fill="#8a8170" text-anchor="middle">BondingManager</text>
+      <text x="145" y="149" font-family="Newsreader" font-size="10" fill="#4a4639" font-style="italic" text-anchor="middle">top 100 by stake, locked in</text>
+
+      <rect x="250" y="95" width="170" height="60" rx="2" fill="#ebe1cf" stroke="#5e6b27" stroke-width="1"/>
+      <text x="335" y="118" font-family="Fraunces" font-size="13" fill="#1c1d22" text-anchor="middle" font-weight="500">SET MINTABLE LPT</text>
+      <text x="335" y="136" font-family="JetBrains Mono" font-size="9" fill="#8a8170" text-anchor="middle">Minter</text>
+      <text x="335" y="149" font-family="Newsreader" font-size="10" fill="#4a4639" font-style="italic" text-anchor="middle">supply × inflation</text>
+
+      <rect x="440" y="95" width="140" height="60" rx="2" fill="#ebe1cf" stroke="#5e6b27" stroke-width="1"/>
+      <text x="510" y="118" font-family="Fraunces" font-size="13" fill="#1c1d22" text-anchor="middle" font-weight="500">SEED RANDOM</text>
+      <text x="510" y="136" font-family="JetBrains Mono" font-size="9" fill="#8a8170" text-anchor="middle">blockhash</text>
+
+      <line x1="230" y1="88" x2="150" y2="92" stroke="#5e6b27" stroke-width="1.2" marker-end="url(#a3)"/>
+      <line x1="450" y1="88" x2="508" y2="92" stroke="#5e6b27" stroke-width="1.2" marker-end="url(#a3)"/>
+
+      <line x1="335" y1="155" x2="335" y2="188" stroke="#5e6b27" stroke-width="1.5" marker-end="url(#a3)"/>
+
+      <rect x="180" y="195" width="310" height="56" rx="2" fill="#fff" stroke="#5e6b27" stroke-width="1.5"/>
+      <text x="335" y="219" font-family="Fraunces" font-size="15" fill="#1c1d22" text-anchor="middle" font-weight="500">each orchestrator calls reward()</text>
+      <text x="335" y="239" font-family="Newsreader" font-size="11" fill="#8a8170" font-style="italic" text-anchor="middle">skip it and this round's LPT is forfeited</text>
+
+      <path d="M 180 223 Q 90 223 90 190 Q 90 36 220 36" fill="none" stroke="#5e6b27" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#a3)"/>
+      <text x="60" y="195" font-family="JetBrains Mono" font-size="10" fill="#8a8170">next round</text>
+    </svg>
+  </div>
+
+  <p><code>contracts/token/Minter.sol</code> holds the money-printer. Each round it computes <code>currentMintableTokens = totalSupply × inflation</code>, then adjusts the inflation rate for next time via a feedback loop: if less than <strong>50%</strong> of all LPT is currently staked, inflation ticks <em>up</em> to bribe more people into staking; if more than 50% is staked, it ticks <em>down</em>. Live values on Arbitrum are an inflation of <code>218500</code> and a step of <code>500</code>, against the Minter's 10<sup>9</sup> divisor — so about <strong>0.0219% per round</strong>, moving by 0.00005% each round.</p>
+
+  <p>Since the "delta" upgrade there's one more claimant. Before rewards are split with delegators, <code>treasuryRewardCutRate</code> (10%) is skimmed off to the protocol treasury — with a safety valve: when the treasury balance crosses <code>treasuryBalanceCeiling</code> (750,000 LPT) the contract sets the cut rate to zero automatically until governance turns it back on.</p>
+
+  <p class="pull">"Nothing in this protocol happens on a schedule. It happens because somebody paid gas to make it happen."</p>
+</section>
+
+<!-- ========== CHAPTER 4 ========== -->
+<section class="chapter" data-concept="4">
+  <span class="chapter-num">CHAPTER 04 — PROBABILISTIC MICROPAYMENTS</span>
+  <h2 class="chapter-title"><span class="concept-marker"></span>Paying a tenth of a cent on a blockchain: pay rarely, but pay big, and let the math even out.</h2>
+
+  <p>Transcoding a video segment is worth a fraction of a cent. Writing a payment to a blockchain costs more than that. If every segment triggered an on-chain transfer, the fees would dwarf the payments. Everything in <code>contracts/pm/</code> exists to solve this, and it's the most genuinely clever idea in the repo.</p>
+
+  <p>The trick is a <strong>lottery</strong>. Instead of paying a gateway's orchestrator $0.001 ten thousand times, the gateway sends ten thousand signed <strong>tickets</strong>, each worth $10 but with only a 1-in-10,000 chance of winning. Ninety-nine-point-nine-nine percent of tickets are worthless paper that never touch the chain. The occasional winner gets redeemed on-chain for the full $10. Over time the orchestrator receives the same expected value, but pays gas maybe once a day instead of ten thousand times.</p>
+
+  <p>A ticket is a struct with a <code>faceValue</code> (payout if it wins), a <code>winProb</code> (the odds), and a <code>recipientRandHash</code>. The winner check is one line, and it's worth reading because it explains the whole design:</p>
+
+  <pre><code>// MixinTicketBrokerCore.sol
+function isWinningTicket(bytes _sig, uint256 _recipientRand, uint256 _winProb)
+    returns (bool)
+{
+    return uint256(keccak256(abi.encodePacked(_sig, _recipientRand))) &lt; _winProb;
+}</code></pre>
+
+  <p>Neither side can rig it alone. The gateway's <em>signature</em> and the orchestrator's <em>secret random number</em> are hashed together. The orchestrator committed to their secret in advance by publishing only its hash (<code>recipientRandHash</code>), so they can't fish for a value that makes a ticket win; the gateway can't predict the secret, so they can't hand out only losers. The orchestrator can check winners instantly and privately, and only bothers the chain when there's real money to collect.</p>
+
+  <div class="diagram">
+    <div class="diagram-caption">FIG. 04 — THE LIFE OF A TICKET</div>
+    <svg viewBox="0 0 600 290" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="a4" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#5b3a7a"/>
+        </marker>
+      </defs>
+
+      <text x="75" y="20" font-family="JetBrains Mono" font-size="11" fill="#1c1d22" font-weight="700" text-anchor="middle">GATEWAY</text>
+      <text x="300" y="20" font-family="JetBrains Mono" font-size="11" fill="#1c1d22" font-weight="700" text-anchor="middle">ORCHESTRATOR</text>
+      <text x="520" y="20" font-family="JetBrains Mono" font-size="11" fill="#1c1d22" font-weight="700" text-anchor="middle">CHAIN</text>
+
+      <line x1="75" y1="30" x2="75" y2="275" stroke="#d6c9b1" stroke-width="1" stroke-dasharray="2 4"/>
+      <line x1="300" y1="30" x2="300" y2="275" stroke="#d6c9b1" stroke-width="1" stroke-dasharray="2 4"/>
+      <line x1="520" y1="30" x2="520" y2="275" stroke="#d6c9b1" stroke-width="1" stroke-dasharray="2 4"/>
+
+      <line x1="75" y1="60" x2="515" y2="60" stroke="#5b3a7a" stroke-width="1.5" marker-end="url(#a4)"/>
+      <text x="295" y="54" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">fundDepositAndReserve()  ← ETH locked up front</text>
+
+      <line x1="300" y1="95" x2="80" y2="95" stroke="#5b3a7a" stroke-width="1.5" marker-end="url(#a4)"/>
+      <text x="190" y="89" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">recipientRandHash</text>
+
+      <line x1="75" y1="130" x2="295" y2="130" stroke="#5b3a7a" stroke-width="1.5" marker-end="url(#a4)"/>
+      <text x="185" y="124" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">signed ticket ×10,000</text>
+      <text x="185" y="146" font-family="Newsreader" font-size="10" fill="#8a8170" font-style="italic" text-anchor="middle">off-chain, free, one per work segment</text>
+
+      <rect x="215" y="165" width="175" height="42" rx="2" fill="#fff" stroke="#5b3a7a" stroke-width="1.5"/>
+      <text x="302" y="184" font-family="Fraunces" font-size="13" fill="#1c1d22" text-anchor="middle" font-weight="500">hash(sig, rand) &lt; winProb?</text>
+      <text x="302" y="200" font-family="Newsreader" font-size="10" fill="#8a8170" font-style="italic" text-anchor="middle">checked locally, instantly</text>
+
+      <line x1="305" y1="235" x2="515" y2="235" stroke="#5b3a7a" stroke-width="1.5" marker-end="url(#a4)"/>
+      <text x="410" y="229" font-family="JetBrains Mono" font-size="10" fill="#1c1d22" text-anchor="middle">redeemWinningTicket()</text>
+      <text x="410" y="250" font-family="Newsreader" font-size="10" fill="#8a8170" font-style="italic" text-anchor="middle">only for the ~1 winner</text>
+
+      <text x="520" y="275" font-family="Newsreader" font-size="11" fill="#5b3a7a" font-style="italic" text-anchor="middle">→ fees credited in BondingManager</text>
+    </svg>
+  </div>
+
+  <p>Two pots of ETH back the tickets. The <strong>deposit</strong> is normal spending money. The <strong>reserve</strong> is a backstop that gets tapped when a winning ticket is larger than the remaining deposit, so orchestrators aren't left holding a winner from an account that just ran dry. A gateway wanting its ETH back must call <code>unlock()</code> and wait out the <code>unlockPeriod</code> — the same "slow exit" idea as unbonding.</p>
+
+  <p>When a winning ticket is redeemed, the ETH doesn't go straight to the orchestrator's wallet. <code>TicketBroker</code> calls <code>BondingManager.updateTranscoderWithFees()</code>, which splits it according to that orchestrator's <code>feeShare</code> and credits everyone's pending balance — the same lazy accounting from Chapter 02. Delegators pull their ETH out later with <code>withdrawFees()</code>.</p>
+</section>
+
+<!-- ========== CHAPTER 5 ========== -->
+<section class="chapter" data-concept="5">
+  <span class="chapter-num">CHAPTER 05 — WIRING &amp; UPGRADES</span>
+  <h2 class="chapter-title"><span class="concept-marker"></span>Every contract is behind a proxy, and one registry decides what the proxies point at.</h2>
+
+  <p>Deployed smart contract code is immutable — you cannot edit it. But a protocol handling hundreds of millions of dollars needs to ship fixes. The standard answer is the <strong>proxy pattern</strong>, and Livepeer's variant is the piece of architecture you must understand before you can navigate this repo at all.</p>
+
+  <p>Every user-facing contract is actually <em>two</em> contracts. <code>ManagerProxy</code> holds all the storage and never changes address — it's the address in every explorer, wallet, and subgraph. It has no logic of its own; its fallback function looks up a target address and <code>delegatecall</code>s into it, meaning the target's code runs <em>against the proxy's storage</em>. The target — deployed as <code>BondingManagerTarget</code>, <code>RoundsManagerTarget</code> and so on — holds the logic and is the thing that gets replaced on an upgrade.</p>
+
+  <p>What does the proxy look up against? <code>contracts/Controller.sol</code>, a registry mapping <code>keccak256("BondingManager")</code> → <code>{address, gitCommitHash}</code>. That commit hash is a nice touch: the chain records which source revision each deployed target came from. Upgrading the entire protocol is therefore one transaction — <code>Controller.setContractInfo(id, newTarget, hash)</code> — and every proxy silently starts routing to new code on the next call. The Controller is also a global pause switch, and it <strong>starts paused on deployment</strong>. That last detail will bite you locally; see the runbook below.</p>
+
+  <div class="diagram">
+    <div class="diagram-caption">FIG. 05 — WHO CONTROLS WHAT</div>
+    <svg viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="a5" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#a6791a"/>
+        </marker>
+      </defs>
+
+      <rect x="200" y="10" width="200" height="50" rx="2" fill="#1c1d22"/>
+      <text x="300" y="32" font-family="Fraunces" font-size="14" fill="#f4ede0" text-anchor="middle" font-weight="500">GOVERNANCE MULTISIG</text>
+      <text x="300" y="49" font-family="Newsreader" font-size="10" fill="#d8cfba" font-style="italic" text-anchor="middle">humans with keys</text>
+
+      <line x1="300" y1="60" x2="300" y2="82" stroke="#a6791a" stroke-width="1.5" marker-end="url(#a5)"/>
+
+      <rect x="220" y="88" width="160" height="44" rx="2" fill="#fff" stroke="#a6791a" stroke-width="1.5"/>
+      <text x="300" y="108" font-family="Fraunces" font-size="14" fill="#1c1d22" text-anchor="middle" font-weight="500">Governor.sol</text>
+      <text x="300" y="124" font-family="Newsreader" font-size="10" fill="#8a8170" font-style="italic" text-anchor="middle">stage → wait → execute</text>
+
+      <line x1="300" y1="132" x2="300" y2="154" stroke="#a6791a" stroke-width="1.5" marker-end="url(#a5)"/>
+
+      <rect x="200" y="160" width="200" height="50" rx="2" fill="#ebe1cf" stroke="#a6791a" stroke-width="2"/>
+      <text x="300" y="181" font-family="Fraunces" font-size="15" fill="#1c1d22" text-anchor="middle" font-weight="500">Controller.sol</text>
+      <text x="300" y="199" font-family="JetBrains Mono" font-size="9" fill="#8a8170" text-anchor="middle">name → {address, gitHash}</text>
+
+      <g stroke="#a6791a" stroke-width="1.2" fill="none">
+        <line x1="240" y1="210" x2="90" y2="248" marker-end="url(#a5)"/>
+        <line x1="280" y1="210" x2="230" y2="248" marker-end="url(#a5)"/>
+        <line x1="320" y1="210" x2="370" y2="248" marker-end="url(#a5)"/>
+        <line x1="360" y1="210" x2="510" y2="248" marker-end="url(#a5)"/>
+      </g>
+
+      <g font-family="JetBrains Mono" font-size="10" fill="#1c1d22">
+        <rect x="10" y="252" width="150" height="40" fill="#fff" stroke="#a6791a" stroke-width="1"/>
+        <text x="85" y="270" text-anchor="middle" font-weight="700">BondingManager</text>
+        <text x="85" y="284" text-anchor="middle" fill="#8a8170" font-size="9">proxy → target</text>
+
+        <rect x="170" y="252" width="140" height="40" fill="#fff" stroke="#a6791a" stroke-width="1"/>
+        <text x="240" y="270" text-anchor="middle" font-weight="700">RoundsManager</text>
+        <text x="240" y="284" text-anchor="middle" fill="#8a8170" font-size="9">proxy → target</text>
+
+        <rect x="320" y="252" width="120" height="40" fill="#fff" stroke="#a6791a" stroke-width="1"/>
+        <text x="380" y="270" text-anchor="middle" font-weight="700">TicketBroker</text>
+        <text x="380" y="284" text-anchor="middle" fill="#8a8170" font-size="9">proxy → target</text>
+
+        <rect x="450" y="252" width="140" height="40" fill="#fff" stroke="#a6791a" stroke-width="1"/>
+        <text x="520" y="270" text-anchor="middle" font-weight="700">Minter</text>
+        <text x="520" y="284" text-anchor="middle" fill="#8a8170" font-size="9">not proxied</text>
+      </g>
+
+      <text x="300" y="322" font-family="Newsreader" font-size="12" fill="#8a8170" font-style="italic" text-anchor="middle">one setContractInfo() call re-points any of them at new logic</text>
+    </svg>
+  </div>
+
+  <p>Who is allowed to call that? Two separate systems, and mixing them up is a common confusion:</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <span class="card-tag">PROTOCOL GOVERNANCE</span>
+      <h4>Governor.sol</h4>
+      <p>Owns the Controller. Upgrades are <em>staged</em> then <em>executed</em> after a delay, so the community can see a change coming. Driven by a multisig, informed by off-chain LIP votes run through <code>Poll.sol</code>.</p>
+    </div>
+    <div class="card">
+      <span class="card-tag">TREASURY GOVERNANCE · DELTA</span>
+      <h4>LivepeerGovernor.sol</h4>
+      <p>A newer, fully on-chain OpenZeppelin Governor that controls only the treasury for now. Voting power comes from staked LPT via <code>BondingVotes.sol</code>, and delegators can <em>override</em> the vote their orchestrator cast.</p>
+    </div>
+  </div>
+
+  <p>That override behavior lives in <code>GovernorCountingOverridable.sol</code> and is the most Livepeer-specific piece of governance in the repo: your orchestrator votes with your stake by default, but you can reclaim your share and vote against them. <code>BondingVotes.sol</code> is what makes it possible — it keeps historical checkpoints of everyone's stake so a vote can be scored against a past round rather than whatever the balances happen to be today.</p>
+
+  <p>The rest of the repo map, briefly: <code>deploy/</code> holds hardhat-deploy scripts and, importantly, <code>migrations.config.ts</code> — the per-network parameter table (round length, active set size, inflation) worth reading in full. <code>tasks/</code> holds one-off CLI commands. <code>test/unit/</code> tests contracts in isolation with mocks; <code>test/integration/</code> deploys the real system and drives it end to end — those are the best-written documentation in the repo. <code>deployments/</code> records what is actually live on-chain.</p>
+</section>
+
+<!-- ========== LOCAL SETUP ========== -->
+<section class="chapter">
+  <span class="chapter-num">LOCAL SETUP</span>
+  <h2 class="chapter-title">Standing up your own Livepeer, start to finish.</h2>
+
+  <p>This is the baseline: a complete, private copy of the protocol running on your laptop, with fake LPT you can mint yourself and rounds you can fast-forward at will. Nothing here touches a real network and nothing costs money. <strong>Every command below was run against this repo on Node 22 and works</strong> — including the three places the README doesn't warn you about.</p>
+
+  <pre><code>git clone https://github.com/livepeer/protocol.git
+cd protocol
+cp .env.sample .env            # leave it empty for local work
+yarn
+yarn compile                   # ~1 min, downloads solc 0.8.9</code></pre>
+
+  <p>The <code>.env</code> keys (<code>PRIVATE_KEY</code>, <code>INFURA_KEY</code>, <code>ETHERSCAN_API_KEY</code>) are only needed to touch real networks. For local work an empty file is fine — but the file must exist.</p>
+
+  <p><strong>Run the tests first.</strong> This is the highest-value thing you can do on day one. Unit tests are fast and hermetic; integration tests deploy the entire protocol into an in-process chain and drive it end to end.</p>
+
+  <pre><code>yarn test:unit          # 769 tests, ~2 min — contracts in isolation, with mocks
+yarn test:integration   # full system: bond → round → reward → tickets
+yarn test               # everything</code></pre>
+
+  <p><strong>Now the persistent local network.</strong> The tests spin up a throwaway chain each run; this gives you one that stays alive so you can poke at it from a console. In terminal one — and note the flag, because without it this command <em>fails</em>:</p>
+
+  <pre><code>npx hardhat node --no-deploy    # local chain on http://127.0.0.1:8545</code></pre>
+
+  <p><strong>Gotcha #1.</strong> Plain <code>npx hardhat node</code> dies with <code>HH604: No deployment found for: Controller</code>. The <code>hardhat-deploy</code> plugin auto-runs every script in <code>deploy/</code> on startup, and <code>deploy_ai_service_registry.ts</code> assumes a Controller already exists. <code>--no-deploy</code> skips that; you'll deploy explicitly in a moment.</p>
+
+  <p>In terminal two, deploy the protocol, add one dummy contract, and <em>unpause</em>:</p>
+
+  <pre><code>yarn deploy --network localhost   # = hardhat deploy --tags Contracts,Poll
+npx hardhat deploy --tags ARBITRUM_LPT_DUMMIES --network localhost
+npx hardhat unpause --network localhost</code></pre>
+
+  <p><strong>Gotcha #2.</strong> The Controller's constructor sets <code>paused = true</code> and the deploy script never turns it off. Until you unpause, nearly every call reverts with <code>"system is paused"</code>.</p>
+
+  <p><strong>Gotcha #3</strong> is the one that will genuinely stump you. Skip the <code>ARBITRUM_LPT_DUMMIES</code> line and <code>initializeRound()</code> reverts with the deeply unhelpful <code>"function call to a non-contract account"</code>. Reason: the Minter computes total supply as L2 supply plus L1 circulating supply, and asks a contract called <code>L2LPTDataCache</code> for that second number. On Arbitrum it's real; locally nothing registers it, so the Minter calls address zero. That tag deploys a stub. (The integration tests dodge this differently — <code>test/helpers/setupIntegrationTest.ts</code> registers a <code>GenericMock</code> for the same slot.)</p>
+
+  <p>Two things are quietly different about a local deploy, and both are deliberate gifts to you. Because <code>localhost</code> isn't in the <code>LIVE_NETWORKS</code> list in <code>deploy/deploy_contracts.ts</code>, you get <strong><code>AdjustableRoundsManager</code></strong> instead of the real one — it overrides <code>blockNum()</code> so you can call <code>mineBlocks(n)</code> and skip through rounds instantly instead of waiting 5,760 real blocks. And because it isn't a production network, a <strong><code>LivepeerTokenFaucet</code></strong> is deployed holding 6,343,700 fake LPT, with another 500,000 minted straight to your deployer account. Free money, by design.</p>
+
+  <p>Now drive it. Put this in <code>scripts/drive.ts</code> — it must live inside the repo or TypeScript won't resolve <code>hardhat</code> — and run it with <code>npx hardhat run --network localhost scripts/drive.ts</code>:</p>
+
+  <pre><code>import {ethers, deployments} from "hardhat"
+
+async function main() {
+    const [me] = await ethers.getSigners()
+    const at = async (n: string, as = n) =>
+        ethers.getContractAt(as, (await deployments.get(n)).address)
+
+    const bm = await at("BondingManager")
+    const rm = await at("AdjustableRoundsManager")
+    const token = await at("LivepeerToken")
+
+    // get the clock off block zero, then open the first round
+    const roundLength = await rm.roundLength()
+    await (await rm.mineBlocks(roundLength.mul(1000))).wait()
+    await (await rm.initializeRound()).wait()
+
+    // become an orchestrator: approve, self-bond, set commission
+    const amount = ethers.utils.parseEther("1000")
+    await (await token.approve(bm.address, amount)).wait()
+    await (await bm.bond(amount, me.address)).wait()
+    await (await bm.transcoder(100000, 500000)).wait()  // 10% cut, 50% feeShare
+
+    // a transcoder only joins the active set from the NEXT round
+    await (await rm.mineBlocks(roundLength)).wait()
+    await (await rm.initializeRound()).wait()
+
+    const before = await bm.transcoderTotalStake(me.address)
+    await (await bm.reward()).wait()
+    const after = await bm.transcoderTotalStake(me.address)
+    console.log("minted:", ethers.utils.formatEther(after.sub(before)))
+}
+
+main().catch(e => { console.error(e); process.exit(1) })</code></pre>
+
+  <p>That prints <code>minted: 0.9786491</code> — one round of inflation on a 1,000 LPT self-stake with nobody else competing. Two details worth internalizing, because both are real protocol behavior and not local quirks: the <code>mineBlocks(roundLength × 1000)</code> at the top is needed because <code>AdjustableRoundsManager</code> starts at block zero and <code>initializeRound()</code> reads <code>blockhash(blockNum − 1)</code>, which underflows; and you must cross a round boundary <em>after</em> registering before <code>reward()</code> works, because the active set is frozen when a round opens.</p>
+
+  <p>If you'd rather read than type: <code>test/integration/Rewards.js</code> is that same sequence with real assertions. When you want a shared devnet on a real testnet rather than localhost, <code>doc/devnet.md</code> covers it — and <code>doc/deploy_delta.md</code> is a genuinely interesting read: the real eleven-step checklist used to ship the last mainnet upgrade, governance calls and all.</p>
+</section>
+
+<!-- ========== DECISION GRID ========== -->
+<section class="chapter">
+  <span class="chapter-num">WHEN TO USE WHAT</span>
+  <h2 class="chapter-title">Where to look, by question.</h2>
+
+  <table class="decision">
+    <thead>
+      <tr><th>If you're asking…</th><th>Go to…</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>"How does someone stake, and who earns what?"</td><td><strong><code>contracts/bonding/BondingManager.sol</code></strong> — start at <code>bond()</code>, <code>reward()</code>, <code>pendingStake()</code></td></tr>
+      <tr><td>"How much new LPT exists each round?"</td><td><strong><code>contracts/token/Minter.sol</code></strong> — <code>setCurrentRewardTokens()</code> and <code>setInflation()</code></td></tr>
+      <tr><td>"When does anything actually happen?"</td><td><strong><code>contracts/rounds/RoundsManager.sol</code></strong> — <code>initializeRound()</code> is the heartbeat</td></tr>
+      <tr><td>"How do gateways pay without gas eating it all?"</td><td><strong><code>contracts/pm/mixins/MixinTicketBrokerCore.sol</code></strong> — <code>redeemWinningTicket()</code></td></tr>
+      <tr><td>"How is any of this upgraded?"</td><td><strong><code>Controller.sol</code> + <code>ManagerProxy.sol</code></strong> — registry plus delegatecall</td></tr>
+      <tr><td>"Who is allowed to change things?"</td><td><strong><code>governance/Governor.sol</code></strong> (protocol) vs <strong><code>treasury/LivepeerGovernor.sol</code></strong> (treasury)</td></tr>
+      <tr><td>"What are the live parameter values?"</td><td><strong><code>deploy/migrations.config.ts</code></strong> — per-network table; <code>deployments/</code> for addresses</td></tr>
+      <tr><td>"How do I see the whole system work at once?"</td><td><strong><code>test/integration/</code></strong> — better than any prose docs, including this guide</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ========== HANDS-ON ========== -->
+<section class="chapter">
+  <span class="chapter-num">HANDS-ON</span>
+  <h2 class="chapter-title">Six things to build, shortest first.</h2>
+
+  <p>Each one forces you to use a concept rather than read about it. Do them in order; each assumes the previous.</p>
+
+  <div class="project">
+    <div class="p-meta"><span>PROJECT 01</span><span class="level">~30 min · concept: WIRING</span></div>
+    <h4>Get green tests and one deliberate red one.</h4>
+    <p>Run <code>yarn test:unit</code> until it passes. Then open <code>test/unit/BondingManager.js</code>, change one expected number, and watch it fail. Trivial, but it proves your toolchain works and teaches you to read Hardhat's failure output — which you'll be staring at a lot.</p>
+    <span class="deliverable">deliverable: a passing suite, and a screenshot of one failure you caused on purpose</span>
+  </div>
+
+  <div class="project">
+    <div class="p-meta"><span>PROJECT 02</span><span class="level">~1 hour · concept: ROUNDS</span></div>
+    <h4>Drive a live local protocol by hand.</h4>
+    <p>Follow the runbook: node, deploy, dummies, unpause, then the <code>drive.ts</code> script. Get to <code>minted: 0.9786491</code>. Then change one thing — bond a different amount, or add a second orchestrator with a bigger stake — and predict the new number before you run it. This is the moment the protocol stops being abstract.</p>
+    <span class="deliverable">deliverable: a transcript showing your stake grow after reward(), plus one correct prediction</span>
+  </div>
+
+  <div class="project">
+    <div class="p-meta"><span>PROJECT 03</span><span class="level">~2 hours · concept: STAKE</span></div>
+    <h4>Script the delegator's-eye view.</h4>
+    <p>Write a standalone script that funds three accounts from the faucet, has them all delegate to your orchestrator with different amounts, advances ten rounds calling <code>reward()</code> each time, then prints each account's <code>pendingStake()</code>. Vary <code>rewardCut</code> between runs and watch the split move. You now have the skeleton of an economic simulation.</p>
+    <span class="deliverable">deliverable: scripts/sim-rewards.ts printing a per-delegator earnings table</span>
+  </div>
+
+  <div class="project">
+    <div class="p-meta"><span>PROJECT 04</span><span class="level">~2 hours · concept: MICROPAYMENTS</span></div>
+    <h4>Win the lottery on purpose.</h4>
+    <p>Using <code>test/helpers/ticket.js</code> as your reference, fund a deposit and reserve, construct and sign a ticket with <code>winProb</code> set to the maximum so it always wins, and redeem it. Then set a realistic probability and loop until one actually hits. Confirm the fees land in the orchestrator's pending balance, not their wallet.</p>
+    <span class="deliverable">deliverable: a test that redeems a winning ticket and asserts the fee split</span>
+  </div>
+
+  <div class="project">
+    <div class="p-meta"><span>PROJECT 05</span><span class="level">~half a day · concept: UPGRADES</span></div>
+    <h4>Ship an upgrade to your own chain.</h4>
+    <p>Add a trivial view function to <code>BondingManager</code>, compile, deploy it as a new target, and re-point the Controller with <code>setContractInfo</code>. Call your new function through the <em>unchanged</em> proxy address. Then confirm that all existing stake survived. Do this once and the proxy pattern will never confuse you again.</p>
+    <span class="deliverable">deliverable: a hardhat task that upgrades a target and proves state persisted</span>
+  </div>
+
+  <div class="project">
+    <div class="p-meta"><span>PROJECT 06</span><span class="level">weekend · concept: ECONOMICS</span></div>
+    <h4>Answer an economics question two ways.</h4>
+    <p>Pick a question like "if an orchestrator does 2% of network work, how do their rewards look as fees grow 10%/month?" and answer it twice: once as a spreadsheet built from the formulas in Chapters 02 and 03, and once as a scripted run over simulated rounds on a local chain. Compare. Where they agree, the simulation was unnecessary; where they diverge, you have found a question that genuinely needs one.</p>
+    <span class="deliverable">deliverable: one chart, plus a short note on which questions genuinely need a simulator</span>
+  </div>
+</section>
+
+<!-- ========== GLOSSARY ========== -->
+<div class="glossary">
+  <h3>Quick <em>reference</em>.</h3>
+  <dl class="gloss-grid">
+    <div>
+      <dt>LPT</dt>
+      <dd>Livepeer Token. Staked to earn the right to do work and to earn rewards. Not used to pay for transcoding.</dd>
+    </div>
+    <div>
+      <dt>Orchestrator / Transcoder</dt>
+      <dd>Same thing. The code says "transcoder"; docs and people say "orchestrator." Runs GPUs, self-stakes, accepts delegation.</dd>
+    </div>
+    <div>
+      <dt>Gateway / Broadcaster</dt>
+      <dd>Also the same thing, and called "sender" inside TicketBroker. Has video, pays ETH.</dd>
+    </div>
+    <div>
+      <dt>Delegator</dt>
+      <dd>Anyone who bonds LPT. Points it at an orchestrator and shares their rewards and fees.</dd>
+    </div>
+    <div>
+      <dt>Round</dt>
+      <dd>5,760 blocks, roughly a day. The unit of time for the entire protocol. Must be opened by calling <code>initializeRound()</code>.</dd>
+    </div>
+    <div>
+      <dt>Active set</dt>
+      <dd>The top 100 orchestrators by total stake. Only they can earn in a round; the set is frozen when the round opens.</dd>
+    </div>
+    <div>
+      <dt>rewardCut / feeShare</dt>
+      <dd>An orchestrator's terms. <code>rewardCut</code> is the LPT they keep; <code>feeShare</code> is the ETH they give away. Asymmetric on purpose — read carefully.</dd>
+    </div>
+    <div>
+      <dt>Unbonding period</dt>
+      <dd>Seven rounds you must wait between <code>unbond()</code> and <code>withdrawStake()</code>. A security delay, not a fee.</dd>
+    </div>
+    <div>
+      <dt>PM / probabilistic micropayment</dt>
+      <dd>The ticket lottery in <code>contracts/pm/</code>. Rare large on-chain payouts standing in for constant tiny ones.</dd>
+    </div>
+    <div>
+      <dt>Deposit vs reserve</dt>
+      <dd>A gateway's two pots of ETH. Deposit pays tickets; reserve is the backstop when a winner exceeds the deposit.</dd>
+    </div>
+    <div>
+      <dt>Proxy / target</dt>
+      <dd>Storage lives in the proxy (permanent address); logic lives in the target (replaceable). <code>delegatecall</code> joins them.</dd>
+    </div>
+    <div>
+      <dt>Controller</dt>
+      <dd>The registry mapping contract names to target addresses, plus the global pause switch. Upgrades happen here.</dd>
+    </div>
+    <div>
+      <dt>PERC_DIVISOR</dt>
+      <dd>1,000,000 in <code>MathUtils</code> (10<sup>9</sup> in the Minter's V2, 10<sup>27</sup> in <code>PreciseMathUtils</code>). Percentages are numerators over it.</dd>
+    </div>
+    <div>
+      <dt>LIP</dt>
+      <dd>Livepeer Improvement Proposal. The spec-and-vote process; <code>lipUpgradeRound</code> in RoundsManager records when each took effect.</dd>
+    </div>
+  </dl>
+</div>
+
+<footer>END · KEEP · RE-READ</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Livepeer Devnet Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+</head>
+<body>
+
+<div id="app">
+
+  <header id="statusbar">
+    <div class="status-left">
+      <span class="brand">LIVEPEER<span class="brand-dim">·DEVNET</span></span>
+      <span class="chip" id="chip-chain"><i class="dot"></i><span>CHECKING…</span></span>
+      <span class="chip" id="chip-deploy"><i class="dot"></i><span>PROTOCOL</span></span>
+      <span class="chip" id="chip-paused"><i class="dot"></i><span>PAUSE</span></span>
+    </div>
+    <div class="status-right">
+      <div class="stat" title="The protocol's block number, which is what rounds are computed from. Locally this is a variable you can fast-forward, so it runs far ahead of the chain's own block height.">
+        <label>PROTO BLOCK</label><b id="stat-block">—</b>
+      </div>
+      <div class="stat"><label>ROUND</label><b id="stat-round">—</b></div>
+      <div class="stat wide">
+        <label>ROUND PROGRESS</label>
+        <div class="meter" title="How far through the current round the chain is"><i id="stat-progress"></i></div>
+      </div>
+      <div class="stat"><label>ACTING AS</label>
+        <select id="acting-as" title="Every action you take is sent from this account"></select>
+      </div>
+      <div class="stat"><label>ETH</label><b id="stat-eth">—</b></div>
+      <div class="stat"><label>LPT</label><b id="stat-lpt">—</b></div>
+    </div>
+  </header>
+
+  <div id="body">
+    <nav id="rail">
+      <button class="rail-btn" data-panel="setup"    data-accent="chain"><span class="k">1</span>SETUP</button>
+      <button class="rail-btn" data-panel="time"     data-accent="time"><span class="k">2</span>TIME</button>
+      <button class="rail-btn" data-panel="stake"    data-accent="stake"><span class="k">3</span>STAKE</button>
+      <button class="rail-btn" data-panel="payments" data-accent="pay"><span class="k">4</span>PAYMENTS</button>
+      <button class="rail-btn" data-panel="knobs"    data-accent="knob"><span class="k">5</span>KNOBS</button>
+      <button class="rail-btn" data-panel="accounts" data-accent="chain"><span class="k">6</span>ACCOUNTS</button>
+      <div class="rail-spacer"></div>
+      <button class="rail-btn ghost" id="btn-tour" title="A short guided sequence that gets you from nothing to earning rewards">GUIDED TOUR</button>
+    </nav>
+
+    <main id="main"><div class="loading">Connecting…</div></main>
+  </div>
+
+  <footer id="tape">
+    <div class="tape-head">
+      <span class="tape-title">EVENT TAPE</span>
+      <span class="tape-hint">everything that happens, in order — nothing is silent</span>
+      <button id="tape-clear" class="mini">CLEAR</button>
+      <button id="tape-toggle" class="mini">HIDE</button>
+    </div>
+    <div id="tape-lines"></div>
+  </footer>
+
+</div>
+
+<div id="tooltip" role="tooltip"></div>
+<div id="toasts"></div>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>
