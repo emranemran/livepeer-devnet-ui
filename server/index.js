@@ -7,6 +7,7 @@ const path = require("path")
 const {bus, emit, history} = require("./bus")
 const {createProcesses} = require("./processes")
 const {createChain} = require("./chain")
+const {createNodes} = require("./nodes")
 
 const ROOT = path.resolve(__dirname, "..")
 const PUBLIC = path.join(ROOT, "public")
@@ -15,6 +16,7 @@ const config = JSON.parse(fs.readFileSync(path.join(ROOT, "config.json"), "utf8"
 const processes = createProcesses(config)
 const chain = createChain(config, processes)
 
+const nodes = createNodes(config, chain)
 const actions = require("./actions")({config, chain, processes})
 
 const MIME = {
@@ -221,6 +223,25 @@ const server = http.createServer(async (req, res) => {
 
         if (pathname.startsWith("/api/series") && req.method === "GET") {
             return sendJson(res, 200, actions.series.all())
+        }
+
+        // ── real go-livepeer daemons ────────────────────────────────────────
+        if (pathname === "/api/nodes" && req.method === "GET") {
+            return sendJson(res, 200, await nodes.snapshot())
+        }
+
+        if (pathname === "/api/nodes/pull" && req.method === "POST") {
+            await nodes.pullImage()
+            return sendJson(res, 200, {ok: true})
+        }
+
+        if (pathname.startsWith("/api/nodes/") && req.method === "POST") {
+            const [, , , role, op] = pathname.split("/")
+            const body = await readBody(req)
+            if (op === "start") return sendJson(res, 200, await nodes.start(role))
+            if (op === "stop") return sendJson(res, 200, await nodes.stop(role))
+            if (op === "fund") return sendJson(res, 200, await nodes.fund(role, body))
+            return sendJson(res, 404, {error: `Unknown node operation "${op}"`})
         }
 
         if (pathname.startsWith("/api/")) {

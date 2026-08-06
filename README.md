@@ -49,6 +49,7 @@ self-contained — download and open in a browser.
 | **PAYMENTS** | The probabilistic micropayment lottery — sign a batch of tickets, redeem winners |
 | **KNOBS** | Every governance-owned parameter, with the inflation feedback loop visualised |
 | **ACCOUNTS** | All 250 test accounts, balances, roles, and who you're acting as |
+| **ROLES** | Runs the real `go-livepeer` daemon in Docker against your chain, so it takes over the buttons |
 
 ## How it's built
 
@@ -62,6 +63,12 @@ No framework, no bundler, no build step.
   validates every request against it. **Adding a control is one entry here.**
 - `public/` — vanilla ES modules. The browser never loads ethers; it just
   `fetch`es and listens to a server-sent event stream.
+- `server/nodes.js` — manages real `go-livepeer` containers: pins the platform
+  for Apple Silicon, writes the daemon's keystore so it never prompts, funds it,
+  and streams its logs.
+- `server/rpcshim.js` — translates go-ethereum's `input` call-data field into the
+  `data` field hardhat 2.8.3 expects. Without it the daemon's very first contract
+  read fails with a misleading "function selector was not recognized".
 
 Chain interaction happens entirely server-side using the devnet's unlocked
 accounts, so no private key is ever handled.
@@ -78,6 +85,13 @@ accounts, so no private key is ever handled.
   "network": "localhost"
 }
 ```
+
+## Don't keep this in a cloud-synced folder
+
+On macOS, iCloud's "Desktop & Documents Folders" sync will happily sync
+`node_modules`. It evicts and re-downloads files underneath running processes,
+which shows up as corrupted installs and commands running 20× slower — not as an
+obvious sync error. Keep the repos somewhere like `~/code`.
 
 ## Safety
 

@@ -14,8 +14,11 @@ const COMMANDS = {
     node: {
         label: "Start the local chain",
         cmd: "npx",
-        args: ["hardhat", "node", "--no-deploy"],
-        display: "npx hardhat node --no-deploy",
+        // Bind 0.0.0.0, not the default 127.0.0.1: the go-livepeer containers
+        // reach the chain through Docker's host gateway, and a loopback-only
+        // listener isn't reachable from there.
+        args: ["hardhat", "node", "--no-deploy", "--hostname", "0.0.0.0"],
+        display: "npx hardhat node --no-deploy --hostname 0.0.0.0",
         why:
             "Starts a private Ethereum on your laptop at 127.0.0.1:8545 with 250 pre-funded accounts. " +
             "The --no-deploy flag is required: without it hardhat-deploy auto-runs every script in deploy/ " +
@@ -57,6 +60,15 @@ const COMMANDS = {
 
 // eslint-disable-next-line no-control-regex
 const ANSI = /\[[0-9;]*[a-zA-Z]/g
+
+/**
+ * Hardhat loads hardhat.config.ts through ts-node, and this repo's tsconfig
+ * includes test/, deploy/, tasks/ and utils/ — so starting a node type-checks
+ * the entire TypeScript project (plus typechain's generated typings) before it
+ * will bind a port. That can take minutes on a cold cache and looks like a hang.
+ * Running the devnet doesn't need type-checking; `yarn tsc` still does it.
+ */
+const CHILD_ENV = {...process.env, TS_NODE_TRANSPILE_ONLY: "1"}
 
 function createProcesses(config) {
     const protocolDir = path.resolve(__dirname, "..", config.protocolDir)
@@ -158,7 +170,7 @@ function createProcesses(config) {
             // it — the terminal signals the whole process group otherwise.
             nodeProc = spawn(spec.cmd, spec.args, {
                 cwd: protocolDir,
-                env: process.env,
+                env: CHILD_ENV,
                 detached: true
             })
 
@@ -303,7 +315,7 @@ function createProcesses(config) {
         emit("lifecycle", {step: id, status: "running", command: spec.display})
 
         return new Promise((resolve, reject) => {
-            const proc = spawn(spec.cmd, spec.args, {cwd: protocolDir, env: process.env})
+            const proc = spawn(spec.cmd, spec.args, {cwd: protocolDir, env: CHILD_ENV})
             const tail = []
 
             const capture = (source, chunk) =>

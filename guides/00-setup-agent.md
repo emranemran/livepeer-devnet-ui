@@ -27,11 +27,25 @@ the UI.
 ## Step 1 — Check prerequisites
 
 ```bash
-node --version    # need v18 or newer; v22 is fine
+node --version      # need v18 or newer; v22 is fine
 git --version
+docker --version    # only needed for the ROLES panel; everything else works without it
 ```
 
 If Node is missing, install it (`brew install node` on macOS).
+
+### Do not put these repos in a cloud-synced folder
+
+On macOS, **System Settings → Apple ID → iCloud → iCloud Drive → Desktop &
+Documents Folders** is on by default. If it is, anything under `~/Documents` gets
+synced — including `node_modules`, which is tens of thousands of small files.
+
+iCloud evicts and re-downloads those files underneath running processes. The
+result is not a clean failure: installs appear to corrupt, `package.json` files
+read as invalid and then valid seconds later, and commands that took 15 seconds
+start taking 10 minutes. It is very hard to diagnose from the symptoms.
+
+**Use `~/code` or any path outside `~/Documents` and `~/Desktop`.**
 
 ## Step 2 — Lay out the two directories side by side
 
@@ -46,7 +60,7 @@ some-parent-dir/
 Clone both into the same parent directory:
 
 ```bash
-mkdir -p ~/code && cd ~/code
+mkdir -p ~/code && cd ~/code     # NOT ~/Documents — see the warning above
 git clone https://github.com/emranemran/livepeer-devnet-ui.git
 git clone https://github.com/livepeer/protocol.git
 ```
@@ -137,6 +151,44 @@ orchestrators. If you see it, everything is correct.
 
 ---
 
+## Step 7 — Optional: run the real go-livepeer daemon
+
+Steps 1–6 give you a protocol you drive by hand. The **ROLES** panel (key `7`)
+instead runs the actual `go-livepeer` binary in a Docker container, pointed at
+your local chain — the same daemon orchestrators run in production, with the same
+flags Livepeer's own end-to-end tests use.
+
+Requirements: Docker Desktop running, and a one-time **~4.4 GB image pull**.
+
+In the UI: **ROLES → Orchestrator → START**. The UI will pull the image, create
+the daemon's Ethereum key, fund it from account #0, and launch the container.
+When it's up you'll see its contract addresses resolve in the event tape and its
+status go green.
+
+Three things this setup handles that will otherwise waste your afternoon:
+
+1. **Apple Silicon.** `livepeer/go-livepeer` publishes `linux/amd64` only. Without
+   an explicit platform, Docker fails with `no matching manifest for
+   linux/arm64/v8`. The UI pins `--platform linux/amd64`, so it runs under
+   emulation.
+2. **The keystore passphrase.** Left alone, the daemon finds no Ethereum account,
+   decides to create one, and prompts for a passphrase on stdin — which in a
+   container means it dies with `Error creating Ethereum account manager: EOF`.
+   The UI writes the key first, so there is nothing to prompt for.
+3. **The `input` vs `data` field.** This one is genuinely nasty. Modern
+   go-ethereum sends call data in a field named `input`; hardhat 2.8.3, which
+   this protocol repo pins, only reads `data`. Hardhat therefore sees an empty
+   call and reports `function selector was not recognized and there's no fallback
+   nor receive function` — which reads like a contract-version mismatch and sends
+   you hunting in entirely the wrong place. The UI runs a small translating shim
+   (`server/rpcshim.js`) on port 8546 and points containers at that.
+
+Note that on a local devnet the daemon's round-initialisation loop watches for L1
+blocks that never advance on their own, so it will sit idle until you mine blocks
+from the TIME panel. That is expected.
+
+---
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
@@ -149,6 +201,10 @@ orchestrators. If you see it, everything is correct.
 | Arithmetic underflow on initialize round | The chain starts at block zero and the contract reads the *previous* block's hash | Mine some blocks first — the UI's time controls do this for you |
 | `ERC20: transfer amount exceeds balance` when bonding | That account has no LPT | Fund it from account #0 on the ACCOUNTS panel |
 | `transcoder()` reverts, "lock period" | You're in the frozen tail of a round | Advance to the next round |
+| `no matching manifest for linux/arm64/v8` | Apple Silicon; the image is amd64-only | Handled automatically; if pulling by hand add `--platform linux/amd64` |
+| Daemon exits with `account manager: EOF` | It tried to prompt for a keystore passphrase | Use the ROLES panel, which writes the key first |
+| `function selector was not recognized` from a daemon | go-ethereum sends `input`, hardhat 2.8.3 reads `data` | The RPC shim handles it; make sure port 8546 is free |
+| Everything is 20× slower than it should be, installs corrupt | The repos are in an iCloud-synced folder | Move them outside `~/Documents` — see Step 1 |
 
 ## Notes for whoever runs this
 

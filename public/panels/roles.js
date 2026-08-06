@@ -1,0 +1,337 @@
+import {el, card, kpi, panelHead, note, help, toast} from "../lib/ui.js"
+import {fromWei, shortAddr} from "../lib/format.js"
+import {SERIES} from "../lib/charts.js"
+
+// Panel-local state, so a poll tick doesn't wipe what you're looking at.
+const local = {nodes: null, busy: null, loaded: false}
+
+function refreshNodes(store, ctx, {quiet = false} = {}) {
+    return ctx.api
+        .get("/api/nodes")
+        .then(n => {
+            local.nodes = n
+            local.loaded = true
+            if (!quiet) store.emitChange()
+        })
+        .catch(() => {})
+}
+
+export default function rolesPanel(store, ctx) {
+    const s = store.state || {}
+
+    if (!local.loaded) {
+        refreshNodes(store, ctx)
+    }
+    const n = local.nodes
+
+    if (!s.deployed) {
+        return el(
+            "div",
+            {},
+            panelHead("ROLES", "Deploy the protocol first.", "The daemons need a Controller address to talk to.", "chain"),
+            note("Run the SETUP panel, then come back.", "warn")
+        )
+    }
+
+    if (!n) {
+        return el("div", {}, panelHead("ROLES", "Checking Docker…", "One moment.", "chain"))
+    }
+
+    if (!n.docker) {
+        return el(
+            "div",
+            {},
+            panelHead(
+                "ROLES · REAL DAEMONS",
+                "Docker isn't running.",
+                "This panel runs the actual go-livepeer daemon in a container, pointed at your local chain.",
+                "chain"
+            ),
+            note(
+                "<b>Start Docker Desktop and reload.</b> Everything else in this UI works without it — only this " +
+                    "panel needs containers.",
+                "bad"
+            )
+        )
+    }
+
+    async function act(role, op, body) {
+        local.busy = `${role}:${op}`
+        store.emitChange()
+        try {
+            const res = await ctx.api.post(`/api/nodes/${role}/${op}`, body || {})
+            if (res.error) throw new Error(res.error)
+            await refreshNodes(store, ctx, {quiet: true})
+            await ctx.refresh()
+        } catch (err) {
+            toast(err.message, {kind: "bad", title: `${role} ${op} failed`, ms: 14000})
+        } finally {
+            local.busy = null
+            store.emitChange()
+        }
+    }
+
+    // ── per-role card ───────────────────────────────────────────────────────
+    function roleCard(role, info) {
+        const running = info.state === "running"
+        const ready = running && info.status && info.status.up
+        const funded = info.balances && info.balances.eth !== "0"
+
+        const steps = [
+            {
+                label: "Start the daemon",
+                done: running,
+                hint: "Launches a real go-livepeer container against your chain. It generates its own Ethereum key on first boot.",
+                btn: running
+                    ? {text: "STOP", cls: "secondary", op: "stop"}
+                    : {text: "START", cls: "accent", op: "start"}
+            },
+            {
+                label: "Fund its account",
+                done: Boolean(funded),
+                hint: "A fresh daemon has no money and can't pay gas. Send it ETH — and LPT if it's going to stake.",
+                btn: running ? {text: "FUND", cls: "secondary", op: "fund"} : null
+            }
+        ]
+
+        const stepNodes = steps.map((step, i) =>
+            el(
+                "div",
+                {class: `step ${step.done ? "done" : ""}`, style: "grid-template-columns:30px minmax(0,1fr) auto"},
+                el("div", {class: "step-num", text: step.done ? "✓" : String(i + 1)}),
+                el(
+                    "div",
+                    {},
+                    el("h4", {style: "font-size:13.5px"}, step.label, help(step.hint, "nodes.js")),
+                    el("p", {style: "font-size:12px;margin-bottom:0", text: step.hint})
+                ),
+                step.btn
+                    ? el("button", {
+                          class: `btn ${step.btn.cls}`,
+                          text: local.busy === `${role}:${step.btn.op}` ? "…" : step.btn.text,
+                          disabled: Boolean(local.busy),
+                          onclick: () => act(role, step.btn.op)
+                      })
+                    : el("span", {class: "step-state", text: "—"})
+            )
+        )
+
+        return card(
+            info.label.toUpperCase(),
+            {
+                sub: running ? (ready ? "running · ready" : "starting…") : "stopped",
+                accent: role === "orchestrator" ? "stake" : "pay"
+            },
+            el("p", {class: "action-blurb", text: info.blurb}),
+            el(
+                "div",
+                {class: "kpis", style: "grid-template-columns:1fr 1fr;margin-bottom:12px"},
+                kpi("ACCOUNT", info.address ? shortAddr(info.address) : "—", {
+                    sub: info.address ? "generated by the daemon" : "appears after first start",
+                    helpText:
+                        "The daemon creates its own Ethereum key in its data directory on first boot — exactly as a " +
+                        "real operator's node would. You then fund it, which is why it starts life broke."
+                }),
+                kpi(
+                    "BALANCE",
+                    info.balances ? `${fromWei(info.balances.eth, 2)} ETH` : "—",
+                    {sub: info.balances ? `${fromWei(info.balances.lpt, 0)} LPT` : ""}
+                )
+            ),
+            ...stepNodes,
+            el("hr", {class: "rule"}),
+            el(
+                "div",
+                {},
+                el(
+                    "div",
+                    {style: "font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--muted);margin-bottom:6px"},
+                    "WHAT IT TAKES OVER FROM YOU"
+                ),
+                el(
+                    "div",
+                    {style: "display:flex;flex-wrap:wrap;gap:5px"},
+                    ...info.takesOver.map(t =>
+                        el("span", {class: `tag ${ready ? "on" : "off"}`, text: t})
+                    )
+                ),
+                el("p", {
+                    class: "dim",
+                    style: "font-size:11.5px;margin-top:8px",
+                    text: ready
+                        ? "These are now happening without you. Watch the event tape."
+                        : "Start the daemon and these stop being your job."
+                })
+            )
+        )
+    }
+
+    // ── topology ────────────────────────────────────────────────────────────
+    const orch = n.roles.orchestrator
+    const gw = n.roles.gateway
+    const orchUp = orch.state === "running"
+    const gwUp = gw.state === "running"
+
+    const topology = el(
+        "div",
+        {class: "chart-wrap"},
+        (() => {
+            const NS = "http://www.w3.org/2000/svg"
+            const svg = document.createElementNS(NS, "svg")
+            svg.setAttribute("viewBox", "0 0 620 260")
+
+            const mk = (tag, attrs, text) => {
+                const e = document.createElementNS(NS, tag)
+                for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v)
+                if (text !== undefined) e.textContent = text
+                return e
+            }
+
+            const box = (x, y, w, h, on, title, sub, colour) => {
+                svg.append(mk("rect", {
+                    x, y, width: w, height: h, rx: 2,
+                    fill: on ? "#fff" : "#f4f2ee",
+                    stroke: on ? colour : "#c9c5bb",
+                    "stroke-width": on ? 2 : 1,
+                    "stroke-dasharray": on ? "" : "5 4"
+                }))
+                svg.append(mk("text", {
+                    x: x + w / 2, y: y + 26, "text-anchor": "middle",
+                    "font-family": "Fraunces, serif", "font-size": 14, "font-weight": 500,
+                    fill: on ? "#14150f" : "#86837a"
+                }, title))
+                svg.append(mk("text", {
+                    x: x + w / 2, y: y + 44, "text-anchor": "middle",
+                    "font-family": "JetBrains Mono, monospace", "font-size": 9.5,
+                    fill: "#86837a"
+                }, sub))
+            }
+
+            // Gateway ─ Orchestrator ─ Chain
+            box(20, 40, 170, 62, gwUp, "GATEWAY", gwUp ? `:${gw.servicePort}` : "not running", SERIES[4])
+            box(225, 40, 170, 62, orchUp, "ORCHESTRATOR", orchUp ? `:${orch.servicePort}` : "not running", SERIES[1])
+            box(430, 40, 170, 62, true, "CHAIN", "127.0.0.1:8545", SERIES[0])
+
+            const arrow = (x1, x2, y, label, on, dashed) => {
+                svg.append(mk("line", {
+                    x1, x2, y1: y, y2: y,
+                    stroke: on ? "#14150f" : "#c9c5bb",
+                    "stroke-width": on ? 1.5 : 1,
+                    "stroke-dasharray": dashed ? "4 4" : ""
+                }))
+                svg.append(mk("text", {
+                    x: (x1 + x2) / 2, y: y - 6, "text-anchor": "middle",
+                    "font-family": "JetBrains Mono, monospace", "font-size": 9,
+                    fill: on ? "#14150f" : "#a8a49b"
+                }, label))
+            }
+
+            arrow(190, 225, 71, "tickets", gwUp && orchUp, true)
+            arrow(395, 430, 71, "RPC", orchUp, false)
+
+            // What each side is doing right now.
+            svg.append(mk("text", {
+                x: 310, y: 140, "text-anchor": "middle",
+                "font-family": "JetBrains Mono, monospace", "font-size": 9.5,
+                "letter-spacing": 1, fill: "#86837a"
+            }, "HAPPENING WITHOUT YOU"))
+
+            const jobs = [
+                ["initializeRound()", orchUp],
+                ["reward()", orchUp],
+                ["ServiceRegistry URI", orchUp],
+                ["ticket signing", gwUp]
+            ]
+            jobs.forEach(([name, on], i) => {
+                const x = 40 + i * 145
+                svg.append(mk("rect", {
+                    x, y: 158, width: 130, height: 30, rx: 2,
+                    fill: on ? "#fff" : "#f4f2ee",
+                    stroke: on ? SERIES[5] : "#d6d2c9",
+                    "stroke-width": on ? 1.5 : 1
+                }))
+                svg.append(mk("text", {
+                    x: x + 65, y: 177, "text-anchor": "middle",
+                    "font-family": "JetBrains Mono, monospace", "font-size": 9,
+                    fill: on ? "#14150f" : "#a8a49b"
+                }, name))
+            })
+
+            svg.append(mk("text", {
+                x: 310, y: 218, "text-anchor": "middle",
+                "font-family": "Newsreader, serif", "font-size": 11.5,
+                "font-style": "italic", fill: "#3d3b34"
+            }, orchUp
+                ? "The orchestrator daemon is doing these on a schedule. You no longer press those buttons."
+                : "Right now these are all your job — that is what the other panels are."))
+
+            return svg
+        })()
+    )
+
+    return el(
+        "div",
+        {},
+        panelHead(
+            "ROLES · REAL DAEMONS",
+            "Stop pressing the buttons. Run the thing that presses them.",
+            "This launches an actual go-livepeer container against your chain — the same binary orchestrators run in " +
+                "production, with the same flags Livepeer's own end-to-end tests use.",
+            "chain"
+        ),
+        !n.imagePresent
+            ? note(
+                  `<b>First run needs a download.</b> <code>${n.image}</code> is around 2 GB and is pulled once. ` +
+                      `Starting a role below will fetch it — expect a few minutes the first time.`,
+                  "warn"
+              )
+            : null,
+        note(
+            "<b>What changes when a daemon is running.</b> Until now, every round you opened and every reward you " +
+                "claimed was you standing in for software. Start the orchestrator and it takes those over — the " +
+                "TIME panel's buttons keep working, but you'll notice they stop being necessary.",
+            "",
+            "chain"
+        ),
+        card("TOPOLOGY", {sub: "what is live right now", accent: "chain"}, topology),
+        el("div", {style: "height:16px"}),
+        el("div", {class: "grid two"}, roleCard("orchestrator", orch), roleCard("gateway", gw)),
+        el("div", {style: "height:16px"}),
+        card(
+            "HOW THIS MAPS TO PRODUCTION",
+            {sub: "same binary, same flags"},
+            el(
+                "table",
+                {class: "data"},
+                el("thead", {}, el("tr", {}, el("th", {}, "FLAG"), el("th", {}, "WHAT IT DOES"))),
+                el(
+                    "tbody",
+                    {},
+                    ...[
+                        ["-network devnet", "tells the node this isn't mainnet, so it takes the Controller address from you"],
+                        ["-ethUrl", "which chain to talk to — your local one instead of an Arbitrum RPC"],
+                        ["-ethController", "the one address it needs; every other contract is looked up through it"],
+                        ["-orchestrator -transcoder", "run as an orchestrator and do the transcoding in-process"],
+                        ["-serviceAddr", "the address it writes into ServiceRegistry so gateways can find it"],
+                        ["-initializeRound", "turn on the round-opening bot — this is the INITIALIZE ROUND button"],
+                        ["-blockPollingInterval 1", "poll fast, because a devnet mines instantly"]
+                    ].map(([flag, what]) =>
+                        el("tr", {}, el("td", {class: "mono"}, flag), el("td", {class: "dim"}, what))
+                    )
+                )
+            )
+        )
+    )
+}
+
+// Keep node state fresh while the panel is open.
+setInterval(() => {
+    if (local.loaded && document.querySelector('.rail-btn.active[data-panel="roles"]')) {
+        fetch("/api/nodes")
+            .then(r => r.json())
+            .then(n => {
+                local.nodes = n
+            })
+            .catch(() => {})
+    }
+}, 4000)

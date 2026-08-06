@@ -985,6 +985,101 @@ main().catch(e => { console.error(e); process.exit(1) })</code></pre>
   </div>
 </section>
 
+<!-- ========== APPENDIX — PLAIN WORDS ========== -->
+<section class="chapter">
+  <span class="chapter-num">APPENDIX — PLAIN WORDS</span>
+  <h2 class="chapter-title">The words everyone assumes you already know.</h2>
+
+  <p>This guide, like most crypto writing, leans on about ten words as if they were obvious. They aren't. Here's what each one actually means, with no metaphors that fall apart under pressure — and, where it helps, what it corresponds to on the devnet you can run yourself.</p>
+
+  <div class="project">
+    <h4>Chain</h4>
+    <p>A shared database that nobody owns. Normally a database sits on a company's server and that company can edit any row; a blockchain keeps the same database on thousands of machines with no admin who can change it.</p>
+    <p>The trick is that machines don't pass the database around — they pass <em>transactions</em>, and each machine runs them in the same order and therefore ends up with the same answer. Agreement by re-execution rather than by trust. The "chain" is literal: transactions are bundled into <strong>blocks</strong>, and each block carries a fingerprint of the one before it, so altering old history breaks every fingerprint after it.</p>
+    <span class="deliverable">on your devnet: one process pretending to be all of those machines</span>
+  </div>
+
+  <div class="project">
+    <h4>Contract</h4>
+    <p>A badly named thing: it is a <strong>program that lives on the chain</strong>. Nobody signs it and there's nothing legal about it.</p>
+    <p>It has two halves — <strong>code</strong>, fixed the moment it's deployed and unchangeable afterwards, and <strong>storage</strong>, its own private data that changes as people use it. What makes it different from an ordinary program is that nobody operates it: there's no admin who could refuse you or quietly alter the output, anyone may call it, and it can hold and move money by itself. It also runs exactly as written, bugs included — which is why the proxy pattern in Chapter 05 exists at all.</p>
+    <p>The analogy that survives scrutiny is a vending machine: fixed rules, public, holds the money, no cashier.</p>
+    <span class="deliverable">on your devnet: BondingManager, RoundsManager, Minter — each its own program at its own address</span>
+  </div>
+
+  <div class="project">
+    <h4>Transaction</h4>
+    <p>A signed instruction to change something. It says who is calling, which contract, which function, with what arguments — and it carries a signature proving the sender authorised it.</p>
+    <p>Reading costs nothing and happens instantly, because your own machine can just look. <em>Writing</em> needs a transaction, because every machine in the network has to run it and agree. That asymmetry explains a lot of the design in this protocol.</p>
+    <span class="deliverable">every time the event tape shows a hash, that was one transaction</span>
+  </div>
+
+  <div class="project">
+    <h4>Address</h4>
+    <p>A 42-character identifier like <code>0xf39F…2266</code>. It's just a name that things can be attached to, and it comes in two flavours: an <strong>account</strong> controlled by whoever holds the matching key, or a <strong>contract</strong>, where the address holds code instead of a person.</p>
+    <p>You cannot tell which is which by looking. Both receive money the same way.</p>
+  </div>
+
+  <div class="project">
+    <h4>Keys and wallets</h4>
+    <p>An address is derived from a <strong>private key</strong> — a very large secret number. Whoever holds that number controls that address, completely and permanently. There is no password reset and no support line.</p>
+    <p>A "wallet" doesn't hold your money; the chain does. A wallet is just software that stores your key and uses it to sign transactions. Losing the key loses the funds, because control <em>is</em> the key.</p>
+    <span class="deliverable">on your devnet: 250 accounts whose keys are printed publicly — which is exactly why you must never send real funds there</span>
+  </div>
+
+  <div class="project">
+    <h4>Gas</h4>
+    <p>The fee you pay to make a transaction happen. Every machine in the network has to execute your instruction, so you pay for the computing you're asking of them — measured in units of work, priced in ETH.</p>
+    <p>This is the constraint behind most of the protocol's odd-looking decisions: it's why earnings are computed on demand rather than paid out to everyone, and it's the entire reason payments are a lottery instead of a transfer.</p>
+    <span class="deliverable">on your devnet: free and instant, which is why the sandbox teaches you the rules but nothing about cost</span>
+  </div>
+
+  <div class="project">
+    <h4>Token</h4>
+    <p>A number in a contract's storage. That's genuinely all it is. The <code>LivepeerToken</code> contract keeps a table of address → balance, and "sending 100 LPT" means calling a function that subtracts 100 from one row and adds 100 to another.</p>
+    <p>There's no coin and no file. A token is valuable because a shared, tamper-evident table says it's yours and everyone agrees to read that table.</p>
+    <p><strong>ETH</strong> is different in one way: it's built into the chain itself rather than living in a contract, which is why it can pay for gas and LPT can't.</p>
+  </div>
+
+  <div class="project">
+    <h4>Minting</h4>
+    <p>Creating new tokens out of nothing and assigning them to someone. Not "mining" — no puzzle, no computation, no discovery. A contract with permission simply increases the total supply and credits an address.</p>
+    <p>In Livepeer the <code>Minter</code> holds that permission. Each round it works out how much new LPT <em>may</em> be created — total supply multiplied by the inflation rate — and active orchestrators claim their share by calling <code>reward()</code>. Nobody's balance is reduced to pay for it. What actually happens is <strong>dilution</strong>: the pie gets bigger, so everyone who <em>didn't</em> earn any owns a slightly smaller slice of it.</p>
+    <p>That's the incentive design in one line. Inflation isn't a gift to participants so much as a slow tax on non-participants, and it's why the protocol can pay people without anyone writing a cheque.</p>
+    <span class="deliverable">on your devnet: the 0.9786491 LPT you earned came from nowhere — it was minted</span>
+  </div>
+
+  <div class="project">
+    <h4>Rounds</h4>
+    <p>The protocol's unit of time. A chain has no clock and no scheduler — nothing happens on a timer, only when somebody sends a transaction — so anything that needs to happen "periodically" needs a period that everyone agrees on. That's a round: a fixed number of blocks.</p>
+    <p>Rounds are what make the system coherent. The set of orchestrators eligible to earn is frozen per round. The amount of LPT mintable is decided per round. Commission changes lock near the end of a round so delegators get a stable window to review terms. Waiting periods are counted in rounds, not days.</p>
+    <p>And a round doesn't begin by itself. Someone has to call <code>initializeRound()</code> and pay the gas, which freezes the active set, sets the mintable amount, and stores a randomness seed. Think of it as a shift change that only happens because somebody walks over and rings the bell.</p>
+    <span class="deliverable">on your devnet: the TIME panel — a round costs one button press instead of most of a day</span>
+  </div>
+
+  <div class="project">
+    <h4>Node and RPC</h4>
+    <p>A <strong>node</strong> is one machine running the chain's software, holding a copy of the state. An <strong>RPC endpoint</strong> is a node that accepts questions over the internet — "what's this balance?", "please broadcast this transaction".</p>
+    <p>Services like Infura and Alchemy run nodes so you don't have to. An RPC endpoint is a door into the network, not the place the protocol lives.</p>
+    <span class="deliverable">on your devnet: 127.0.0.1:8545 — your own node and your own door</span>
+  </div>
+
+  <div class="project">
+    <h4>Deploy</h4>
+    <p>Publishing a contract's compiled code to the chain so it gets an address and can be called. It's a one-way step: after deployment the code cannot be edited, only replaced by deploying something new and pointing at it instead.</p>
+    <span class="deliverable">on your devnet: the SETUP panel's second step, about 21 transactions</span>
+  </div>
+
+  <div class="project">
+    <h4>Revert</h4>
+    <p>A failed transaction. The contract hit a rule it wouldn't break, so everything the transaction did is undone as if it never ran — you still pay gas, but no state changes.</p>
+    <p>Reverts are not crashes. They're the protocol stating a rule out loud, and reading them is one of the faster ways to learn how the system actually behaves.</p>
+    <span class="deliverable">try to withdraw stake before the unbonding period and read what comes back</span>
+  </div>
+
+  <p class="pull">"Almost every strange decision in this protocol is downstream of one fact: writing to a chain costs real money, and reading from it doesn't."</p>
+</section>
+
 <!-- ========== GLOSSARY ========== -->
 <div class="glossary">
   <h3>Quick <em>reference</em>.</h3>

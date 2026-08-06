@@ -2,5 +2,6 @@
   "protocolDir": "../protocol",
   "port": 4000,
   "rpcUrl": "http://127.0.0.1:8545",
-  "network": "localhost"
+  "network": "localhost",
+  "goLivepeerImage": "livepeer/go-livepeer:latest"
 }

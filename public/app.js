@@ -8,6 +8,7 @@ import stakePanel from "./panels/stake.js"
 import paymentsPanel from "./panels/payments.js"
 import knobsPanel from "./panels/knobs.js"
 import accountsPanel from "./panels/accounts.js"
+import rolesPanel from "./panels/roles.js"
 
 const PANELS = {
     setup: setupPanel,
@@ -15,7 +16,8 @@ const PANELS = {
     stake: stakePanel,
     payments: paymentsPanel,
     knobs: knobsPanel,
-    accounts: accountsPanel
+    accounts: accountsPanel,
+    roles: rolesPanel
 }
 
 const ctx = {
@@ -106,7 +108,7 @@ for (const btn of document.querySelectorAll(".rail-btn[data-panel]")) {
 
 document.addEventListener("keydown", ev => {
     if (ev.target.matches("input, select, textarea")) return
-    const keys = {1: "setup", 2: "time", 3: "stake", 4: "payments", 5: "knobs", 6: "accounts"}
+    const keys = {1: "setup", 2: "time", 3: "stake", 4: "payments", 5: "knobs", 6: "accounts", 7: "roles"}
     if (keys[ev.key]) show(keys[ev.key])
 })
 
